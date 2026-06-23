@@ -1,8 +1,9 @@
 import * as THREE from "three"
 import { SimplexNoise } from "three/examples/jsm/Addons.js";
 import { RNG } from "./rng";
+import { blocks } from "./block";
 const geometry = new THREE.BoxGeometry();//C'est le squelette. Tu dis : "Je veux la forme d'une boîte (un cube)".
-const material = new THREE.MeshLambertMaterial({color:0x00d000}) 
+const material = new THREE.MeshLambertMaterial() 
 export class World extends THREE.Group{
     /**
      * @type{{
@@ -46,7 +47,7 @@ export class World extends THREE.Group{
                 const row =[]
                 for(let z=0;z<this.size.width;z++){
                     row.push({
-                        id:0,
+                        id:blocks.empty.id,
                         instanceId:null
                     });
                 }
@@ -55,6 +56,9 @@ export class World extends THREE.Group{
             this.data.push(slice); // Correction : On pousse slice dans data
         }
     }
+    /**
+     * Generate the terrain data for the world
+     */
     /**
      * Generate the terrain data for the world
      */
@@ -69,15 +73,27 @@ export class World extends THREE.Group{
                     z/this.params.terrain.scale);
                 //Scale the noise based on the magnitude/offset
                 const scaledNoise = this.params.terrain.offset + this.params.terrain.magnitude * value;
-                //computing height between 0 and height
-                let height = this.size.height * scaledNoise;
+                
+                // Correction : On utilise Math.floor pour obtenir un nombre entier de blocs
+                let height = Math.floor(this.size.height * scaledNoise);
                 //Clamping height between 0 and max height
-                height = Math.max(0,Math.min(height,this.size.height-1))
+                height = Math.max(0, Math.min(height, this.size.height - 1))
 
-                for (let y=0;y<= height ; y++){
-                    this.setBlockId(x,y,z,1);
+                // On ne boucle que jusqu'à "height" pour remplir la colonne construite
+                for (let y = 0; y <= height; y++) {
+                    if (y === height) {
+                        // Le bloc le plus haut reçoit de l'herbe
+                        this.setBlockId(x, y, z, blocks.grass.id)
+                    } else {
+                        // Tous les blocs en dessous reçoivent de la terre
+                        this.setBlockId(x, y, z, blocks.dirt.id)
+                    }
                 }
 
+                // Optionnel mais propre : On s'assure que le reste de la colonne jusqu'au plafond est bien vide
+                for (let y = height + 1; y < this.size.height; y++) {
+                    this.setBlockId(x, y, z, blocks.empty.id)
+                }
             }
         }
     }
@@ -99,17 +115,23 @@ export class World extends THREE.Group{
             for (let y=0;y<this.size.height;y++){
                 for (let z = 0; z < this.size.width ; z++) {
                     const blockId=this.getBlock(x,y,z).id;
+                    const blockType=Object.values(blocks).find(x=>x.id === blockId);
                     const instanceId=mesh.count;
 
-                    if(blockId !==0){
-                        matrix.setPosition(x+0.5,y+0.5,z+0.5)
-                        mesh.setMatrixAt(instanceId,matrix) // Correction : Utilisation de instanceId
-                        this.setBlockInstanceId(x,y,z,instanceId);
-                        mesh.count++ // Correction : Une seule incrémentation ici
+                    if(blockId !== 0){
+                        matrix.setPosition(x+0.5, y+0.5, z+0.5)
+                        mesh.setMatrixAt(instanceId, matrix)
+                        mesh.setColorAt(instanceId, new THREE.Color(blockType.color))
+                        this.setBlockInstanceId(x, y, z, instanceId);
+                        mesh.count++
                     }
                   
                 }     
             }
+        }
+        // AJOUTE CETTE LIGNE ICI :
+        if (mesh.count > 0) {
+            mesh.instanceColor.needsUpdate = true;
         }
         this.add(mesh);
     }
