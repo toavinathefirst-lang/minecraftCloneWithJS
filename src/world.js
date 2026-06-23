@@ -1,19 +1,27 @@
 import * as THREE from "three"
 
 const geometry = new THREE.BoxGeometry();//C'est le squelette. Tu dis : "Je veux la forme d'une boîte (un cube)".
-const material = new THREE.MeshLambertMaterial({color:0x00d000}) //C'est la peinture qu'on va mettre dessus. 0x00d000 est un code couleur (Hexadécimal) pour du vert. "Basic" signifie qu'il ne réagit pas aux lumières, il est juste coloré uniformément.
+const material = new THREE.MeshLambertMaterial({color:0x00d000}) 
 export class World extends THREE.Group{
-    constructor(size=32){
+    constructor(size={
+        width:64,height:32,
+    }){
         super();
         this.size = size
     }
     generate(){
-        for (let X = 0; X < this.size; X++) {
-            for (let Z = 0; Z < this.size ; Z++) {
-                const block = new THREE.Mesh(geometry,material)
-                block.position.set(X,0,Z)  
-                this.add(block)             
-            }         
+        const maxCount = this.size.width * this.size.width*this.size.height
+        const mesh= new THREE.InstancedMesh(geometry,material,maxCount)//il faut connaitre a lavance le nombre max d instabce
+        mesh.count =0;
+        const matrix = new THREE.Matrix4()
+        for (let x = 0; x < this.size.width; x++) {
+            for (let y=0;y<this.size.height;y++){
+                for (let z = 0; z < this.size.width ; z++) {
+                    matrix.setPosition(x+0.5,y+0.5,z+0.5)
+                    mesh.setMatrixAt(mesh.count++,matrix)
+                }     
+            }
         }
+        this.add(mesh);
     }
 }
