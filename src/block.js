@@ -6,7 +6,7 @@ export const blocks = {
     grass: {
         id: 1,
         name: 'grass',
-        color: 0x559020 // Vert pour l'herbe en surface
+        color: 0x5a9e32 // Vert pour l'herbe en surface
     },
     dirt: {
         id: 2,
