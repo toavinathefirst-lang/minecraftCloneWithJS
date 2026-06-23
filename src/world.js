@@ -69,7 +69,7 @@ export class World extends THREE.Group{
                 //computing height between 0 and height
                 let height = this.size.height * scaledNoise;
                 //Clamping height between 0 and max height
-                height = Math.max(0,Math.min(height,this.size.height))
+                height = Math.max(0,Math.min(height,this.size.height-1))
 
                 for (let y=0;y<= height ; y++){
                     this.setBlockId(x,y,z,1);
