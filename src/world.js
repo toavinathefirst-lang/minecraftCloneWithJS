@@ -2,6 +2,7 @@ import * as THREE from "three"
 import { SimplexNoise } from "three/examples/jsm/Addons.js";
 import { RNG } from "./rng";
 import { blocks } from "./block";
+import { ressources } from "./block";
 const geometry = new THREE.BoxGeometry();//C'est le squelette. Tu dis : "Je veux la forme d'une boîte (un cube)".
 const material = new THREE.MeshLambertMaterial() 
 export class World extends THREE.Group{
@@ -27,9 +28,34 @@ export class World extends THREE.Group{
         this.size = size
     }
     generate(){
+        const rng=new RNG(this.params.seed)
         this.initializeTerrain()
-        this.generateTerrain()
+        this.generateRessources(rng)
+        this.generateTerrain(rng)
         this.generateMeshes()
+    }
+    //Generating the ressources 
+    /**
+     * @param {RNG} rng 
+     */
+    generateRessources(rng){
+        const simplex = new SimplexNoise(rng)
+        ressources.forEach(ressource=>{
+                for (let x = 0; x < this.size.width; x++) {
+                for (let y = 0; y < this.size.height; y++) {
+                    for (let z = 0; z < this.size.width; z++) {
+                        const value =simplex.noise3d(x/ressource.scale.x,
+                            y/ressource.scale.y,
+                            z/ressource.scale.z);
+                        if (value>ressource.scarcity) {
+                            this.setBlockId(x,y,z,ressource.id)
+                        }      
+                    }
+                    
+                }
+            }
+        })
+       
     }
     /**Initializing  the world terrain
      */
@@ -61,9 +87,10 @@ export class World extends THREE.Group{
      */
     /**
      * Generate the terrain data for the world
+     * @param {RNG} rng 
      */
-    generateTerrain(){
-        const rng=new RNG(this.params.seed)
+    generateTerrain(rng){
+        
         const simplex = new SimplexNoise(rng)
         for (let x = 0; x < this.size.width; x++) {
             for (let z = 0; z < this.size.width; z++) {
@@ -84,7 +111,7 @@ export class World extends THREE.Group{
                     if (y === height) {
                         // Le bloc le plus haut reçoit de l'herbe
                         this.setBlockId(x, y, z, blocks.grass.id)
-                    } else {
+                    } else if (y<height && this.getBlock(x,y,z).id === blocks.empty.id){
                         // Tous les blocs en dessous reçoivent de la terre
                         this.setBlockId(x, y, z, blocks.dirt.id)
                     }
