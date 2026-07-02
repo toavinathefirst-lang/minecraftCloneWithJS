@@ -128,39 +128,56 @@ export class World extends THREE.Group{
      * Generate the 3D representation of the world from the world data
      */
     generateMeshes(){
-        // Nettoyage pour éviter l'accumulation à chaque onChange du lil-gui
+        // 1. Nettoyage pour éviter l'accumulation à chaque régénération
         this.children.forEach(child => {
             if (child.dispose) child.dispose();
         });
-        this.clear()
-        
-        const maxCount = this.size.width * this.size.width*this.size.height
-        const mesh= new THREE.InstancedMesh(geometry,material,maxCount)//il faut connaitre a lavance le nombre max d instabce
-        mesh.count =0;
-        const matrix = new THREE.Matrix4()
-        for (let x = 0; x < this.size.width; x++) {
-            for (let y=0;y<this.size.height;y++){
-                for (let z = 0; z < this.size.width ; z++) {
-                    const blockId=this.getBlock(x,y,z).id;
-                    const blockType=Object.values(blocks).find(x=>x.id === blockId);
-                    const instanceId=mesh.count;
+        this.clear();
 
-                    if(blockId !== blocks.empty.id && !this.isBlockObscured(x,y,z)){
-                        matrix.setPosition(x+0.5, y+0.5, z+0.5)
-                        mesh.setMatrixAt(instanceId, matrix)
-                        mesh.setColorAt(instanceId, new THREE.Color(blockType.color))
+        const maxCount = this.size.width * this.size.width * this.size.height;
+        const meshes = {};
+
+        // 2. Création des tables de correspondance pour les types de blocs
+        Object.values(blocks)
+            .filter(blockType => blockType.id !== blocks.empty.id)
+            .forEach(blockType => {
+                const mesh = new THREE.InstancedMesh(geometry, blockType.material, maxCount);
+                mesh.name = blockType.name;
+                mesh.count = 0;
+                meshes[blockType.id] = mesh;
+            });
+
+        const matrix = new THREE.Matrix4();
+
+        // 3. Boucle unique sur toutes les positions pour remplir les matrices d'instances
+        for (let x = 0; x < this.size.width; x++) {
+            for (let y = 0; y < this.size.height; y++) {
+                for (let z = 0; z < this.size.width; z++) {
+                    const blockId = this.getBlock(x, y, z).id;
+                    if (blockId === blocks.empty.id) continue;
+
+                    const mesh = meshes[blockId];
+                    const instanceId = mesh.count;
+
+                    // Si le bloc est visible (non masqué par ses voisins)
+                    if (!this.isBlockObscured(x, y, z)) {
+                        matrix.setPosition(x + 0.5, y + 0.5, z + 0.5);
+                        mesh.setMatrixAt(instanceId, matrix);
+                        
                         this.setBlockInstanceId(x, y, z, instanceId);
-                        mesh.count++
+                        mesh.count++;
                     }
-                  
                 }     
             }
         }
-        // AJOUTE CETTE LIGNE ICI :
-        if (mesh.count > 0) {
-            mesh.instanceColor.needsUpdate = true;
-        }
-        this.add(mesh);
+        
+        // 4. CORRECTION : On ajoute les meshes au monde UNE SEULE FOIS, 
+        // après la fin des boucles, et uniquement s'ils contiennent des blocs.
+        Object.values(meshes).forEach(mesh => {
+            if (mesh.count > 0) {
+                this.add(mesh);
+            }
+        });
     }
     /**
      * * @param {number} x 
