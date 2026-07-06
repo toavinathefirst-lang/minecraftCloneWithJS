@@ -1,9 +1,10 @@
 import './style/style.css';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
+//import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { World } from './world';
 import { createUI } from './ui';
+import { Player } from './player';
 
 const stats = new Stats()
 document.body.append(stats.dom);
@@ -18,16 +19,16 @@ document.body.appendChild(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
 camera.position.set(-32, 16, -32);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(16, 0, 16);
-controls.update();
+//const controls = new OrbitControls(camera, renderer.domElement);
+// controls.target.set(16, 0, 16);
+// controls.update();
 
 const scene = new THREE.Scene();
 
 const world = new World();
 world.generate();
 scene.add(world);
-
+const player = new Player(scene)
 function setupLight() {
   const sun = new THREE.DirectionalLight();
   sun.position.set(50, 50, 50);
@@ -52,11 +53,18 @@ function setupLight() {
   scene.add(ambient);
 }
 
+let previousTime = performance.now();
 function animate() {
+  let currentTime =performance.now();
+  let dt = (currentTime - previousTime) / 1000;
+
   requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
-  stats.update()
+  //controls.update();
+  player.applyInputs(dt);
+  renderer.render(scene, player.camera);
+  stats.update();
+
+  previousTime = currentTime;
 }
 
 setupLight();
