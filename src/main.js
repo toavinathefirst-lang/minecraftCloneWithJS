@@ -1,6 +1,6 @@
 import './style/style.css';
 import * as THREE from 'three';
-//import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { World } from './world';
 import { createUI } from './ui';
@@ -16,12 +16,12 @@ renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
-camera.position.set(-32, 16, -32);
+const orbitCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight);
+orbitCamera.position.set(-32, 16, -32);
 
-//const controls = new OrbitControls(camera, renderer.domElement);
-// controls.target.set(16, 0, 16);
-// controls.update();
+const controls = new OrbitControls(orbitCamera, renderer.domElement);
+controls.target.set(16, 0, 16);
+controls.update();
 
 const scene = new THREE.Scene();
 
@@ -61,12 +61,21 @@ function animate() {
   requestAnimationFrame(animate);
   //controls.update();
   player.applyInputs(dt);
-  renderer.render(scene, player.camera);
+  renderer.render(scene, player.controls.isLocked ? player.camera : orbitCamera);
   stats.update();
 
   previousTime = currentTime;
 }
+window.addEventListener('resize',()=>{
+  orbitCamera.aspect = window.innerWidth / window.innerHeight;
+  orbitCamera.updateProjectionMatrix();
+
+  player.camera.aspect = window.innerWidth / window.innerHeight;
+  player.camera.updateProjectionMatrix()
+
+  renderer.setSize(window.innerWidth,window.innerHeight)
+})
 
 setupLight();
-createUI(world)
+createUI(world,player)
 animate();

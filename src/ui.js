@@ -2,11 +2,17 @@ import GUI from "three/examples/jsm/libs/lil-gui.module.min.js";
 import { World } from "./world";
 import { blocks } from "./block";
 import { ressources } from "./block";
+import { Player } from "./player";
 /**
  * @param {World} world 
+ * @param {Player} player 
  */
-export function createUI(world){
+export function createUI(world,player){
     const gui = new GUI();
+
+    const playerFolder = gui.addFolder("Player");
+    playerFolder.add(player,"maxSpeed",1,20).name("max Speed")
+
     gui.add(world.size,"width",8,128,1).name("width") //min 8 max 128, 1 pas a la fois
     gui.add(world.size,"height",8,64,1).name("height")
 
