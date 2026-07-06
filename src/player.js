@@ -1,5 +1,5 @@
 import { PointerLockControls } from "three/examples/jsm/Addons.js"; 
-import { PerspectiveCamera, Vector2, Vector3 } from "three";
+import { CameraHelper, PerspectiveCamera, Vector2, Vector3 } from "three";
 import { Scene } from "three";
 export class Player {
     maxSpeed=10;
@@ -7,12 +7,14 @@ export class Player {
     velocity = new Vector3()
     camera = new PerspectiveCamera(70,window.innerWidth/window.innerHeight,0.1,200);
     controls = new PointerLockControls(this.camera,document.body)
+    cameraHelper = new CameraHelper(this.camera)
     /**
      * @param {Scene} scene 
      */
     constructor(scene){
         this.camera.position.set(32,16,32);
         scene.add(this.camera);
+        scene.add(this.cameraHelper)
         
 
         document.addEventListener('keydown',this.onKeyDown.bind(this));

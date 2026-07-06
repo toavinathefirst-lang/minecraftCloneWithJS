@@ -11,10 +11,8 @@ export function createUI(world,player){
     const gui = new GUI();
 
     const playerFolder = gui.addFolder("Player");
-    playerFolder.add(player,"maxSpeed",1,20).name("max Speed")
-
-    gui.add(world.size,"width",8,128,1).name("width") //min 8 max 128, 1 pas a la fois
-    gui.add(world.size,"height",8,64,1).name("height")
+    playerFolder.add(player,"maxSpeed",1,20).name("max Speed");
+    playerFolder.add(player.cameraHelper,'visible').name('show player Camera')
 
     const terrainFolder = gui.addFolder('Terrain');
     terrainFolder.add(world.params,"seed",0,1000).name('Seed')
