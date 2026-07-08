@@ -163,7 +163,7 @@ export class World extends THREE.Group{
 
                     // Si le bloc est visible (non masqué par ses voisins)
                     if (!this.isBlockObscured(x, y, z)) {
-                        matrix.setPosition(x + 0.5, y + 0.5, z + 0.5);
+                        matrix.setPosition(x , y , z );
                         mesh.setMatrixAt(instanceId, matrix);
                         
                         this.setBlockInstanceId(x, y, z, instanceId);

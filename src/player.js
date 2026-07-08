@@ -1,7 +1,10 @@
 import { PointerLockControls } from "three/examples/jsm/Addons.js"; 
-import { CameraHelper, PerspectiveCamera, Vector2, Vector3 } from "three";
+import { CameraHelper, CylinderGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector2, Vector3 } from "three";
 import { Scene } from "three";
 export class Player {
+    radius =0.5;
+    height = 1.75;
+
     maxSpeed=10;
     input = new Vector3();
     velocity = new Vector3()
@@ -19,6 +22,11 @@ export class Player {
 
         document.addEventListener('keydown',this.onKeyDown.bind(this));
         document.addEventListener('keyup',this.onKeyUp.bind(this));
+
+        //Wireframe mesh visualizing the player's bounding cylinder
+        this.boundHelper = new Mesh(new CylinderGeometry(this.radius,this.radius,this.height,16),
+            new MeshBasicMaterial({wireframe:true}));
+        scene.add(this.boundHelper);
     }
     /**
      * 
@@ -34,6 +42,13 @@ export class Player {
             document.getElementById("player-position").innerHTML=this.toString()
 
         }
+    }
+    /**
+     * Updates the positions of the player's bounding cylinder helper
+     */
+    updateBoundsHelper(){
+        this.boundHelper.position.copy(this.position);
+        this.boundHelper.position.y -= this.height /2;
     }
     /**
      * @type {Vector3}
