@@ -170,29 +170,32 @@ export class Physics{
             //Comupte the normal of the collision (pointing away from the contact point)
             //and the overlap between the point     nd the player's bounding cylinder 
 
-            let normal,overlap;
+                let normal,overlap;
 
-            if(overlapY < overlapXZ){
-                normal =new Vector3(0,-Math.sign(dy),0);
-                overlap = overlapY
-                player.onGround=true;
-            }else{
-                normal =new Vector3(-dx,0,-dz).normalize();
-                overlap = overlapXZ
-            }
+                if(overlapY < overlapXZ){
+                    normal =new Vector3(0,-Math.sign(dy),0);
+                    overlap = overlapY
+                    player.onGround=true;
+                } 
+                else {
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    normal = dist > 0.0001
+                        ? new Vector3(-dx, 0, -dz).normalize()
+                        : new Vector3(1, 0, 0); // fallback arbitraire
+                    overlap = overlapXZ;
+                }
             collisions.push({
                 block,
                 contactPoint:closestPoint,
                 normal,
                 overlap
             })
-            }
             this.addContatPointHelper(closestPoint)
         }
-
-        
-        return collisions; // Renvoie un tableau vide pour éviter le crash
-    }
+            
+    }       
+    return collisions; // Renvoie un tableau vide pour éviter le crash
+}
     /**
      * 
      * @param {object} collisions 
@@ -200,7 +203,7 @@ export class Physics{
      */
     resolveCollisions(collisions,player){
         //Resolve the collisions in order of the smallest overlap to the largest 
-        collisions.sort((a, b) => b.overlap - a.overlap);
+        collisions.sort((a, b) => a.overlap - b.overlap);
         for (const collision    of collisions) {
             //TODO:Resove the collision
             //1) Adjust player position so the block and player are no longer overlapping 
