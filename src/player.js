@@ -1,5 +1,5 @@
 import { PointerLockControls } from "three/examples/jsm/Addons.js"; 
-import { CameraHelper, CylinderGeometry, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector2, Vector3 } from "three";
+import { CameraHelper, CylinderGeometry, Euler, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector2, Vector3 } from "three";
 import { Scene } from "three";
 export class Player {
     radius =0.5;
@@ -8,6 +8,8 @@ export class Player {
     maxSpeed=10;
     input = new Vector3();
     velocity = new Vector3()
+    #worldVelocity =new Vector3()
+
     camera = new PerspectiveCamera(70,window.innerWidth/window.innerHeight,0.1,200);
     controls = new PointerLockControls(this.camera,document.body)
     cameraHelper = new CameraHelper(this.camera)
@@ -28,6 +30,19 @@ export class Player {
             new MeshBasicMaterial({wireframe:true}));
         scene.add(this.boundHelper);
     }
+    get worldVelocity(){
+        this.#worldVelocity.copy(this.velocity);
+        this.#worldVelocity.applyEuler(new Euler(0,this.camera.rotation.y,0));
+        return this.#worldVelocity;
+    }
+   /**
+    * 
+    * @param {Vector3} dv 
+    */
+    applyWorldDeltaVelocity(dv){
+        dv.applyEuler(new Euler(0,-this.camera.rotation.y,0));
+        this.velocity.add(dv)
+    }
     /**
      * 
      * @param {number} dt 
@@ -38,6 +53,7 @@ export class Player {
             this.velocity.z = this.input.z;
             this.controls.moveRight(this.velocity.x * dt);
             this.controls.moveForward(this.velocity.z * dt)
+            this.position.y += this.velocity.y *dt;
 
             document.getElementById("player-position").innerHTML=this.toString()
 

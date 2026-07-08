@@ -35,6 +35,9 @@ export class Physics{
      * @param {World} world  
      */
     update(dt, player, world) {
+        player.velocity.y -= this.gravity*dt;
+        player.applyInputs(dt);
+        player.updateBoundsHelper()
         this.detectCollisions(player,world)
     }
     /**
@@ -196,7 +199,13 @@ export class Physics{
             deltaPosition.multiplyScalar(collision.overlap);
             player.position.add(deltaPosition)
             //2)Negate player's velocity along the collision normal
+            //Get the magnitude of the player's velocity along the collision normal
+            let magnitude = player.worldVelocity.dot(collision.normal);
+            //Remove the part of the velocity from the player's velocity
+            let velocityAdjustement=collision.normal.clone().multiplyScalar(magnitude);
 
+            //Apply the velocity to the player
+            player.applyWorldDeltaVelocity(velocityAdjustement.negate())
         }
     }
     /**
