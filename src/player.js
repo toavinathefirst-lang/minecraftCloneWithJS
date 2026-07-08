@@ -4,7 +4,8 @@ import { Scene } from "three";
 export class Player {
     radius =0.5;
     height = 1.75;
-
+    jumpSpeed =10;
+    onGround = false;
     maxSpeed=10;
     input = new Vector3();
     velocity = new Vector3()
@@ -98,6 +99,10 @@ export class Player {
                 this.position.set(32,16,32);
                 this.velocity.set(0,0,0);
                 break;
+            case "Space":
+                if(this.onGround){
+                    this.velocity.y += this.jumpSpeed;
+                }
         
         }
     }

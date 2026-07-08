@@ -19,6 +19,9 @@ const contactMaterial = new MeshBasicMaterial({
 const contactGeometry = new SphereGeometry(0.05,6,6);
 
 export class Physics{
+    simulationRate= 200;
+    timeStep = 1 / this.simulationRate;
+    accumulator=0;
     gravity = 32;
     /**
      * 
@@ -35,10 +38,17 @@ export class Physics{
      * @param {World} world  
      */
     update(dt, player, world) {
-        player.velocity.y -= this.gravity*dt;
-        player.applyInputs(dt);
-        player.updateBoundsHelper()
-        this.detectCollisions(player,world)
+        this.accumulator +=dt;
+
+        while(this.accumulator >=this.timeStep){
+           
+            player.velocity.y -= this.gravity*this.timeStep;
+            player.applyInputs(this.timeStep);
+            player.updateBoundsHelper()
+            this.detectCollisions(player,world);
+            this.accumulator -= this.timeStep;
+        }
+       
     }
     /**
      * 
@@ -46,7 +56,7 @@ export class Physics{
      * @param {World} world 
      */
     detectCollisions(player,world){
-
+         player.onGround=false
         // 1. On vide le groupe des cubes rouges à chaque frame
         this.helpers.clear();
         const candidates = this.broadPhase(player,world);
@@ -165,6 +175,7 @@ export class Physics{
             if(overlapY < overlapXZ){
                 normal =new Vector3(0,-Math.sign(dy),0);
                 overlap = overlapY
+                player.onGround=true;
             }else{
                 normal =new Vector3(-dx,0,-dz).normalize();
                 overlap = overlapXZ
@@ -189,9 +200,7 @@ export class Physics{
      */
     resolveCollisions(collisions,player){
         //Resolve the collisions in order of the smallest overlap to the largest 
-        collisions.sort((a,b)=>{
-            return a.overlap <b.overlap;
-        })
+        collisions.sort((a, b) => b.overlap - a.overlap);
         for (const collision    of collisions) {
             //TODO:Resove the collision
             //1) Adjust player position so the block and player are no longer overlapping 
