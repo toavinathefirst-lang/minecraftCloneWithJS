@@ -64,7 +64,8 @@ function animate() {
   requestAnimationFrame(animate);
   //controls.update();
 
-  physics.update(dt,player,world)
+  physics.update(dt,player,world);
+  world.update(player);
   renderer.render(scene, player.controls.isLocked ? player.camera : orbitCamera);
   stats.update();
 
