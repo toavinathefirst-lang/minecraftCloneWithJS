@@ -1,10 +1,10 @@
 import GUI from "three/examples/jsm/libs/lil-gui.module.min.js";
-import { World } from "./world";
+import { WorldChunk } from "./worldChunk";
 import { blocks } from "./block";
 import { ressources } from "./block";
 import { Player } from "./player";
 /**
- * @param {World} world 
+ * @param {WorldChunk} world 
  * @param {Player} player 
  */
 export function createUI(world,player){
@@ -14,11 +14,10 @@ export function createUI(world,player){
     playerFolder.add(player,"maxSpeed",1,20).name("max Speed");
     playerFolder.add(player.cameraHelper,'visible').name('show player Camera')
 
-    const terrainFolder = gui.addFolder('Terrain');
-    terrainFolder.add(world.params,"seed",0,1000).name('Seed')
-    terrainFolder.add(world.params.terrain,"scale",10,100).name('Scale')
-    terrainFolder.add(world.params.terrain,"magnitude",0,1).name('Magnitude')
-    terrainFolder.add(world.params.terrain,"offset",0,1).name('Offset')
+    // const terrainFolder = gui.addFolder('Terrain');
+    // terrainFolder.add(world.params,"seed",0,1000).name('Seed');
+    // terrainFolder.add(world.chunkSize,"width")  
+   
 
     const ressourcesFolder = gui.addFolder('Ressources');
     ressources.forEach(ressource=>{

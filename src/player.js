@@ -1,137 +1,148 @@
 import { PointerLockControls } from "three/examples/jsm/Addons.js"; 
-import { CameraHelper, CylinderGeometry, Euler, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector2, Vector3 } from "three";
+import { CameraHelper, CylinderGeometry, Euler, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3 } from "three";
 import { Scene } from "three";
-export class Player {
-    radius =0.5;
-    height = 1.75;
-    jumpSpeed =10;
-    onGround = false;
-    maxSpeed=10;
-    input = new Vector3();
-    velocity = new Vector3()
-    #worldVelocity =new Vector3()
 
-    camera = new PerspectiveCamera(70,window.innerWidth/window.innerHeight,0.1,200);
-    controls = new PointerLockControls(this.camera,document.body)
-    cameraHelper = new CameraHelper(this.camera)
+export class Player {
+    radius = 0.5;
+    height = 1.75;
+    jumpSpeed = 10;
+    onGround = false;
+    maxSpeed = 10;
+    input = new Vector3();
+    velocity = new Vector3();
+    #worldVelocity = new Vector3();
+
+    camera = new PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 200);
+    controls = new PointerLockControls(this.camera, document.body);
+    cameraHelper = new CameraHelper(this.camera);
+
     /**
      * @param {Scene} scene 
      */
     constructor(scene){
-        this.camera.position.set(32,16,32);
+        this.camera.position.set(32, 16, 32);
         scene.add(this.camera);
-        scene.add(this.cameraHelper)
-        
+        scene.add(this.cameraHelper);
 
-        document.addEventListener('keydown',this.onKeyDown.bind(this));
-        document.addEventListener('keyup',this.onKeyUp.bind(this));
+        document.addEventListener('keydown', this.onKeyDown.bind(this));
+        document.addEventListener('keyup', this.onKeyUp.bind(this));
 
-        //Wireframe mesh visualizing the player's bounding cylinder
-        this.boundHelper = new Mesh(new CylinderGeometry(this.radius,this.radius,this.height,16),
-            new MeshBasicMaterial({wireframe:true}));
+        // Wireframe mesh visualizing the player's bounding cylinder
+        this.boundHelper = new Mesh(
+            new CylinderGeometry(this.radius, this.radius, this.height, 16),
+            new MeshBasicMaterial({ wireframe: true })
+        );
         scene.add(this.boundHelper);
     }
+
     get worldVelocity(){
         this.#worldVelocity.copy(this.velocity);
-        this.#worldVelocity.applyEuler(new Euler(0,this.camera.rotation.y,0));
+        this.#worldVelocity.applyEuler(new Euler(0, this.camera.rotation.y, 0));
         return this.#worldVelocity;
     }
-   /**
-    * 
-    * @param {Vector3} dv 
-    */
-    applyWorldDeltaVelocity(dv){
-        dv.applyEuler(new Euler(0,-this.camera.rotation.y,0));
-        this.velocity.add(dv)
-    }
+
     /**
-     * 
+     * @param {Vector3} dv 
+     */
+    applyWorldDeltaVelocity(dv){
+        dv.applyEuler(new Euler(0, -this.camera.rotation.y, 0));
+        this.velocity.add(dv);
+    }
+
+    /**
      * @param {number} dt 
      */
     applyInputs(dt){
-        if(this.controls.isLocked){
+        // CORRECTION : Si le pointeur est locké, on applique les entrées clavier
+        if (this.controls.isLocked) {
             this.velocity.x = this.input.x;
             this.velocity.z = this.input.z;
-            this.controls.moveRight(this.velocity.x * dt);
-            this.controls.moveForward(this.velocity.z * dt)
-            this.position.y += this.velocity.y *dt;
+        } else {
+            // Si non locké (pause / inventaire), on coupe les mouvements horizontaux
+            this.velocity.x = 0;
+            this.velocity.z = 0;
+        }
 
-            document.getElementById("player-position").innerHTML=this.toString()
+        // On applique les déplacements horizontaux via PointerLockControls
+        this.controls.moveRight(this.velocity.x * dt);
+        this.controls.moveForward(this.velocity.z * dt);
 
+        // CORRECTION CRITIQUE : La position Y doit toujours s'incrémenter, locké ou non !
+        this.position.y += this.velocity.y * dt;
+
+        // Mise à jour de l'UI uniquement en jeu actif
+        const uiElement = document.getElementById("player-position");
+        if (uiElement && this.controls.isLocked) {
+            uiElement.innerHTML = this.toString();
         }
     }
+
     /**
      * Updates the positions of the player's bounding cylinder helper
      */
     updateBoundsHelper(){
         this.boundHelper.position.copy(this.position);
-        this.boundHelper.position.y -= this.height /2;
+        this.boundHelper.position.y -= this.height / 2;
     }
+
     /**
      * @type {Vector3}
      */
     get position(){
         return this.camera.position;
     }
+
     /**
      * @param {KeyboardEvent} event 
      */
     onKeyDown(event){
-        if(!this.controls.isLocked){
-            this.controls.lock()
+        if (!this.controls.isLocked) {
+            this.controls.lock();
             console.log("controls locked");
-            
         }
+        
         switch (event.code) {
-            case "KeyW":
+            case "KeyW": // Touche Z sur AZERTY
                 this.input.z = this.maxSpeed;
                 break;
-            case "KeyA":
+            case "KeyA": // Touche Q sur AZERTY
                 this.input.x = -this.maxSpeed;
                 break;
-            case "KeyS":
-                this.input.z=-this.maxSpeed;
+            case "KeyS": // Touche S
+                this.input.z = -this.maxSpeed;
                 break;
-            case "KeyD":
+            case "KeyD": // Touche D
                 this.input.x = this.maxSpeed;
                 break;
             case "KeyR":
-                this.position.set(32,16,32);
-                this.velocity.set(0,0,0);
+                this.position.set(32, 16, 32);
+                this.velocity.set(0, 0, 0);
                 break;
             case "Space":
-                if(this.onGround){
-                    this.velocity.y += this.jumpSpeed;
+                if (this.onGround) {
+                    this.velocity.y = this.jumpSpeed; // Remplacement de += par = pour un saut plus constant
                 }
-        
+                break;
         }
     }
+
     /**
      * @param {KeyboardEvent} event 
      */
     onKeyUp(event){
         switch (event.code) {
             case "KeyW":
+            case "KeyS":
                 this.input.z = 0;
                 break;
             case "KeyA":
-                this.input.x = 0;
-                break;
-            case "KeyS":
-                this.input.z=0;
-                break;
             case "KeyD":
                 this.input.x = 0;
                 break;
-        
         }
     }
-    toString(){
-        let str="";
-        str += `X: ${this.position.x.toFixed(3)} `;
-        str += `Y: ${this.position.y.toFixed(3)} `;
-        str += `Z: ${this.position.z.toFixed(3)} `;
-        return str
 
+    toString(){
+        return `X: ${this.position.x.toFixed(3)} Y: ${this.position.y.toFixed(3)} Z: ${this.position.z.toFixed(3)}`;
     }
 }
