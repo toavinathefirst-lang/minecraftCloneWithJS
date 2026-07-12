@@ -1,4 +1,4 @@
-import { Group } from "three";
+import { BoxHelper, Color, Group } from "three";
 import { WorldChunk } from "./worldChunk";
 import { Player } from "./player";
 
@@ -28,17 +28,25 @@ export class World extends Group {
     }
 
     generate() {
+       
         this.disposeChunks();
         for (let x = -1; x <= 1; x++) {
             for (let z = -1; z <= 1; z++) {
                 const chunk = new WorldChunk(this.chunksSize, this.params);
                 // Positionnement correct du chunk dans l'espace 3D
-                chunk.position.set(x * this.chunksSize.width, 0, z * this.chunksSize.width);
+                chunk.position.set(x * this.chunksSize.width  , 0, z *this.chunksSize.width );
                 chunk.userData={x,z};
                 chunk.generate();
                 
-                // CORRECTION : On ajoute le chunk au groupe World (this)
+               
                 this.add(chunk); 
+
+                const helper = new BoxHelper(chunk,new Color(0x00ffff));
+                helper.name = "chunkBoundaryHelper";
+                // AJOUT : on garde une référence au chunk lié, pour pouvoir
+                // supprimer le helper en même temps que son chunk plus tard
+                helper.userData.linkedChunk = chunk;
+                this.add(helper);
             }
         }
     }
@@ -109,7 +117,11 @@ export class World extends Group {
          */
         const getChunksToAdd = (visibleChunks) => {
             // 1. On extrait proprement toutes les coordonnées x,z des chunks existants
-            const existingCoords = this.children.map((obj) => obj.userData);
+            // CORRECTION : on ne garde que les vrais WorldChunk, pas les BoxHelper
+            // (qui n'ont pas de vraies coordonnées de chunk dans leur userData)
+            const existingCoords = this.children
+                .filter((obj) => obj instanceof WorldChunk)
+                .map((obj) => obj.userData);
 
             // 2. On filtre les chunks visibles pour ne garder que ceux qui ne sont PAS dans le monde
             return visibleChunks.filter((visibleChunk) => {
@@ -120,10 +132,58 @@ export class World extends Group {
             });
 }
         const chunksToadd =getChunksToAdd(visibleChunks);
-        // CORRECTION : idem, on passe l'objet directement
+        
         console.log("Chunks to Add:", chunksToadd);
         
         //3-Remove chunks that are no longer visible 
+        /**
+     * Removes current loaded chunks that are no longer visible to the player
+     * @param {{x:number,z:number}[]} visibleChunks
+     * @returns {WorldChunk[]}
+     */
+    const removeUnusedChunks = (visibleChunks) => {
+        /** @type {WorldChunk[]} */
+        // CORRECTION CRITIQUE : on ajoute "chunk instanceof WorldChunk" pour ignorer
+        // les BoxHelper, sinon ils sont considérés à tort comme "à supprimer"
+        // (leur userData n'a pas de x/z) et ça plante sur chunk.disposeInstances()
+        const chunksToRemove= this.children.filter((chunk) => {
+            if (!(chunk instanceof WorldChunk)) return false;
+
+            const { x, z } = chunk.userData;
+
+            
+            const chunkExists = visibleChunks.find((visibleChunk) => {
+                return visibleChunk.x === x && visibleChunk.z === z;
+            });
+
+            // Si le chunk existant n'est PAS dans la liste des chunks visibles, il est à supprimer
+            return !chunkExists;
+        });
+        for (const chunk of chunksToRemove) {
+            chunk.disposeInstances();
+            this.remove(chunk);
+
+            // AJOUT : on retire aussi le BoxHelper associé à ce chunk,
+            // sinon son contour cyan reste flottant dans le vide pour toujours
+            const linkedHelper = this.children.find(
+                (child) => child.name === "chunkBoundaryHelper" && child.userData.linkedChunk === chunk
+            );
+            if (linkedHelper) {
+                this.remove(linkedHelper);
+            }
+
+            console.log(`Removing chunk at :${chunk.userData.x} Z: ${chunk.userData.z}`);
+            
+        }
+        // CORRECTION : on retourne enfin la liste, sinon la variable
+        // extérieure "chunksToRemove" restait "undefined"
+        return chunksToRemove;
+    }
+        const chunksToRemove = removeUnusedChunks(visibleChunks);
+        console.log("Chunks to REMOVE:", chunksToRemove);
+        // CORRECTION : suppression du deuxième appel en double, qui refaisait
+        // tout le travail (et le dispose) une seconde fois pour rien
+        
         //4-Add new chunks that just came into view
 
     }
@@ -174,7 +234,11 @@ export class World extends Group {
          */
 
         getChunk(chunkX, chunkZ) {
+            // CORRECTION CRITIQUE : "instanceof WorldChunk" empêche de récupérer
+            // par erreur un BoxHelper (position toujours à 0,0,0) à la place
+            // du vrai chunk -> c'était la cause du bug de collision au spawn
             return this.children.find((chunk) => (
+                chunk instanceof WorldChunk &&
                 chunk.position.x === chunkX * this.chunksSize.width &&
                 chunk.position.z === chunkZ * this.chunksSize.width
             ));

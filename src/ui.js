@@ -14,10 +14,13 @@ export function createUI(world,player){
     playerFolder.add(player,"maxSpeed",1,20).name("max Speed");
     playerFolder.add(player.cameraHelper,'visible').name('show player Camera')
 
-    // const terrainFolder = gui.addFolder('Terrain');
-    // terrainFolder.add(world.params,"seed",0,1000).name('Seed');
-    // terrainFolder.add(world.chunkSize,"width")  
-   
+    // AJOUT : contrôles du terrain, pour pouvoir l'aplatir en direct
+    const terrainFolder = gui.addFolder('Terrain');
+    terrainFolder.add(world.params.terrain,'scale',10,100).name('Scale');
+    // C'est CE paramètre qui contrôle l'amplitude des variations de hauteur.
+    // À 0, il n'y a plus de relief du tout -> terrain plat
+    terrainFolder.add(world.params.terrain,'magnitude',0,1).name('Magnitude (relief)');
+    terrainFolder.add(world.params.terrain,'offset',0,1).name('Offset (hauteur de base)');
 
     const ressourcesFolder = gui.addFolder('Ressources');
     ressources.forEach(ressource=>{
