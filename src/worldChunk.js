@@ -18,6 +18,7 @@ export class WorldChunk extends THREE.Group {
     }
 
     generate() {
+        const start = performance.now()
         const rng = new RNG(this.params.seed);
         this.initializeTerrain();
         this.generateRessources(rng);
