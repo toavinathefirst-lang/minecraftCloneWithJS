@@ -66,35 +66,55 @@ export class WorldChunk extends THREE.Group {
         }
     }
 
-    generateTerrain(rng) {
-        const simplex = new SimplexNoise(rng);
-        for (let x = 0; x < this.size.width; x++) {
-            for (let z = 0; z < this.size.width; z++) {
-                const value = simplex.noise(
-                    this.position.x +x / this.params.terrain.scale,
-                    this.position.z +z / this.params.terrain.scale
-                );
-                const scaledNoise = this.params.terrain.offset + this.params.terrain.magnitude * value;
-                
-                let height = Math.floor(this.size.height * scaledNoise);
-                height = Math.max(0, Math.min(height, this.size.height - 1));
+            generateTerrain(rng) {
+            const simplex = new SimplexNoise(rng);
 
-                for (let y = 0; y <= height; y++) {
-                    if (y === height) {
-                        this.setBlockId(x, y, z, blocks.grass.id);
-                    } 
-                    // CORRECTION : Ajout de ?.id pour éviter le crash si getBlock renvoie null
-                    else if (y < height && this.getBlock(x, y, z)?.id === blocks.empty.id) {
-                        this.setBlockId(x, y, z, blocks.dirt.id);
+            for (let x = 0; x < this.size.width; x++) {
+                for (let z = 0; z < this.size.width; z++) {
+                    const worldX = this.position.x + x;
+                    const worldZ = this.position.z + z;
+
+                    // --- Bruit "régional" à basse fréquence ---
+                    // échelle bien plus grande que "scale" -> détermine de larges
+                    // zones cohérentes (plaines vs montagnes), un peu comme des biomes.
+                    const regionScale = this.params.terrain.scale * 5;
+                    const region = simplex.noise(worldX / regionScale, worldZ / regionScale); // -1..1
+                    const regionFactor = (region + 1) / 2; // 0..1 (0 = plaine, 1 = montagne)
+
+                    // magnitude locale : interpole entre "quasi plat" et "montagne" (params.terrain.magnitude)
+                    // selon la région dans laquelle on se trouve
+                    const localMagnitude = THREE.MathUtils.lerp(
+                        this.params.terrain.magnitude * 0.15, // plaines quasi plates
+                        this.params.terrain.magnitude,         // montagnes (valeur max du seed)
+                        regionFactor
+                    );
+
+                    // --- Bruit de détail (fréquence normale, celui qu'on avait déjà) ---
+                    const value = simplex.noise(
+                        worldX / this.params.terrain.scale,
+                        worldZ / this.params.terrain.scale
+                    );
+
+                    const scaledNoise = this.params.terrain.offset + localMagnitude * value;
+
+                    let height = Math.floor(this.size.height * scaledNoise);
+                    height = Math.max(0, Math.min(height, this.size.height - 1));
+
+                    for (let y = 0; y <= height; y++) {
+                        if (y === height) {
+                            this.setBlockId(x, y, z, blocks.grass.id);
+                        } 
+                        else if (y < height && this.getBlock(x, y, z)?.id === blocks.empty.id) {
+                            this.setBlockId(x, y, z, blocks.dirt.id);
+                        }
                     }
-                }
 
-                for (let y = height + 1; y < this.size.height; y++) {
-                    this.setBlockId(x, y, z, blocks.empty.id);
+                    for (let y = height + 1; y < this.size.height; y++) {
+                        this.setBlockId(x, y, z, blocks.empty.id);
+                    }
                 }
             }
         }
-    }
 
     generateMeshes() {
         this.children.forEach(child => {

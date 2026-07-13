@@ -1,6 +1,7 @@
 import { BoxHelper, Color, Group } from "three";
 import { WorldChunk } from "./worldChunk";
 import { Player } from "./player";
+import { RNG } from "./rng";
 
 export class World extends Group {
     asyncLoading=true;
@@ -24,6 +25,27 @@ export class World extends Group {
     constructor(seed = 0) {
         super();
         this.seed = seed;
+        this.params.seed = seed;
+
+        // On randomise le "style" du terrain une seule fois pour tout le monde,
+        // à partir du seed. Important : ça ne doit PAS être fait par chunk,
+        // sinon on aurait des ruptures visibles (montagnes hautes d'un côté,
+        // plat de l'autre) aux frontières entre chunks.
+        this.randomizeTerrainParams(seed);
+    }
+
+    /**
+     * Dérive les paramètres de génération de terrain (scale, magnitude, offset)
+     * à partir du seed, pour que chaque seed donne un style de monde différent
+     * (plus ou moins montagneux, plus ou moins vallonné) tout en restant
+     * cohérent/continu sur l'ensemble du monde.
+     * @param {number} seed 
+     */
+    randomizeTerrainParams(seed) {
+        const rng = new RNG(seed);
+        this.params.terrain.scale = 20 + rng.random() * 40;     // ~[20, 60] fréquence du détail
+        this.params.terrain.magnitude = 0.4 + rng.random() * 0.4; // ~[0.4, 0.8] amplitude max (zones montagneuses)
+        this.params.terrain.offset = 0.15 + rng.random() * 0.15;  // ~[0.15, 0.3] niveau de base
     }
 
     generate() {
