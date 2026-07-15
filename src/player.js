@@ -1,7 +1,9 @@
 import { PointerLockControls } from "three/examples/jsm/Addons.js"; 
-import { CameraHelper, CylinderGeometry, Euler, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3 } from "three";
+import { BoxGeometry, CameraHelper, CylinderGeometry, Euler, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Vector2, Vector3 } from "three";
 import { Scene } from "three";
+import { World } from "./world";
 
+const CENTER_SCREEN = new Vector2();
 export class Player {
     radius = 0.5;
     height = 1.75;
@@ -16,6 +18,8 @@ export class Player {
     controls = new PointerLockControls(this.camera, document.body);
     cameraHelper = new CameraHelper(this.camera);
 
+    raycaster = new Raycaster(new Vector3(),undefined,0,3);
+    selectedCoords =null;
     /**
      * @param {Scene} scene 
      */
@@ -32,7 +36,17 @@ export class Player {
             new CylinderGeometry(this.radius, this.radius, this.height, 16),
             new MeshBasicMaterial({ wireframe: true })
         );
-        scene.add(this.boundHelper);
+       // scene.add(this.boundHelper);
+
+       const selectionMaterial = new MeshBasicMaterial({
+        transparent:true,
+        opacity:0.3,
+        color:0xffffaa,
+       })
+
+       const selectionGeometry = new BoxGeometry(1.01,1.01,1.01);
+       this.selectionHelper =new Mesh(selectionGeometry,selectionMaterial);
+       scene.add(this.selectionHelper)
     }
 
     get worldVelocity(){
@@ -90,6 +104,50 @@ export class Player {
      */
     get position(){
         return this.camera.position;
+    }
+    /**
+     * 
+     * @param {World} world 
+     */
+    update(world){
+        this.updateRayCaster(world);
+    }
+    /**
+     * 
+     * @param {World} world 
+     */
+    updateRayCaster(world){
+        this.raycaster.setFromCamera(CENTER_SCREEN,this.camera);
+        const intersections = this.raycaster.intersectObject(world,true);
+
+        if(intersections.length){
+            const intersection = intersections[0];
+
+            // Vérifie que c'est bien une InstancedMesh avec un instanceId valide
+            if (intersection.object.isInstancedMesh && intersection.instanceId !== undefined) {
+                const blockMatrix = new Matrix4();
+                intersection.object.getMatrixAt(intersection.instanceId, blockMatrix);
+
+                // IMPORTANT : getMatrixAt() renvoie la position LOCALE au chunk.
+            // Il faut la combiner avec matrixWorld (position du chunk dans
+            // le monde) pour obtenir la vraie position du bloc.
+                intersection.object.updateMatrixWorld();
+                blockMatrix.premultiply(intersection.object.matrixWorld);
+
+                
+                this.selectedCoords = new Vector3().setFromMatrixPosition(blockMatrix);
+                this.selectionHelper.position.copy(this.selectedCoords);
+                this.selectionHelper.visible = true;
+            } else {
+                // touché quelque chose qui n'est pas un bloc instancié
+                this.selectedCoords = null;
+                this.selectionHelper.visible = false;
+            }
+            
+        }else{
+            this.selectedCoords=null;
+            this.selectionHelper.visible = false;
+        }
     }
 
     /**

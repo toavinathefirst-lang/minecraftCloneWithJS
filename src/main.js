@@ -66,6 +66,7 @@ function animate() {
 
   requestAnimationFrame(animate);
 
+  player.update(world);
   physics.update(dt,player,world);
   world.update(player);
 
