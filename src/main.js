@@ -63,6 +63,8 @@ function setupLight() {
  */
 function onMouseDown(event){
   if(player.controls.isLocked && player.selectedCoords){
+    console.log(`removing the block at ${JSON.stringify(player.selectedCoords)}`);
+    
     world.removeBlock(
       player.selectedCoords.x,
       player.selectedCoords.y,

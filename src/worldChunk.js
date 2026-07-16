@@ -292,6 +292,27 @@ export class WorldChunk extends THREE.Group {
         this.deleteBlockInstance(x, y, z);
         this.setBlockId(x, y, z, blocks.empty.id);
     }
+    /**
+     * @param {number} x 
+     * @param {number} y
+     * @param {number} z  
+     */
+    addBLockInstance(x,y,z){
+        const block = this.getBlock(x, y, z);
+        if (!block || block.id === blocks.empty.id || block.instanceId !== null) return;
+
+        const mesh = this.getMeshForBlockId(block.id);
+        if (!mesh) return;
+
+        const instanceId = mesh.count;
+        this.setBlockInstanceId(x, y, z, instanceId);
+
+        const matrix = new THREE.Matrix4();
+        matrix.setPosition(x, y, z);
+        mesh.setMatrixAt(instanceId, matrix);
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.count++;
+    }
 
     /**
      * "Swap and pop" : déplace la dernière instance du mesh à l'emplacement

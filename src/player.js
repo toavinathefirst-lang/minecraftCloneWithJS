@@ -140,7 +140,7 @@ export class Player {
                 this.selectionHelper.position.copy(this.selectedCoords);
                 this.selectionHelper.visible = true;
 
-                console.log(this.selectedCoords);
+                //console.log(this.selectedCoords);
                 
             } else {
                 // touché quelque chose qui n'est pas un bloc instancié
