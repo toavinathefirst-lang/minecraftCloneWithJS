@@ -275,6 +275,19 @@ export class WorldChunk extends THREE.Group {
         });
         this.clear();
     }
+    /**
+     * 
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
+     * @param {number} blockId 
+     */
+    addBlock(x,y,z,blockId){
+        if(this.getBlock(x,y,z).id === blocks.empty.id){
+            this.setBlockId(x,y,z,blockId);
+            this.addBLockInstance(x,y,z);
+        }
+    }
 
     /**
      * NOTE : c'est cette méthode (singulier) que World#removeBlock() doit

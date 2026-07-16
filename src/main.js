@@ -7,7 +7,7 @@ import { createUI } from './ui';
 import { Player } from './player';
 import { Physics } from './physics';
 import { World } from './world';
-
+import { blocks } from './block';
 const stats = new Stats()
 document.body.append(stats.dom);
 const renderer = new THREE.WebGLRenderer();
@@ -63,13 +63,25 @@ function setupLight() {
  */
 function onMouseDown(event){
   if(player.controls.isLocked && player.selectedCoords){
-    console.log(`removing the block at ${JSON.stringify(player.selectedCoords)}`);
+    if(player.activeBlockId === blocks.empty.id){
+        console.log(`removing the block at ${JSON.stringify(player.selectedCoords)}`);
+      
+      world.removeBlock(
+        player.selectedCoords.x,
+        player.selectedCoords.y,
+        player.selectedCoords.z
+      )
+    }else {
+        console.log(`add the block at ${JSON.stringify(player.selectedCoords)}`);
+      
+      world.addBlock(
+        player.selectedCoords.x,
+        player.selectedCoords.y,
+        player.selectedCoords.z,
+        player.activeBlockId
+      )
+    }
     
-    world.removeBlock(
-      player.selectedCoords.x,
-      player.selectedCoords.y,
-      player.selectedCoords.z
-    )
   }
 }
 document.addEventListener('mousedown',onMouseDown);

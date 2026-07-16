@@ -256,6 +256,24 @@ export class World extends Group {
         this.clear();
         this.chunkQueue = [];
     }
+    /**
+     * @param {number} x
+     * @param {number} blockId  
+     * @param {number} y
+     * @param {number} z  
+     */
+    addBlock(x,y,z,blockId){
+         const coords = this.worldToChunkCoords(x,y,z);
+        const chunk = this.getChunk(coords.chunk.x,coords.chunk.z);
+        if(chunk){
+            chunk.addBlock(
+                coords.block.x,
+                coords.block.y,
+                coords.block.z,
+                blockId
+            )            
+        }
+    }
 
     /**
      * remove the block at (x,y,z) and sets it to empty

@@ -2,6 +2,7 @@ import { PointerLockControls } from "three/examples/jsm/Addons.js";
 import { BoxGeometry, CameraHelper, CylinderGeometry, Euler, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Vector2, Vector3 } from "three";
 import { Scene } from "three";
 import { World } from "./world";
+import { blocks } from "./block";
 
 const CENTER_SCREEN = new Vector2();
 export class Player {
@@ -20,6 +21,7 @@ export class Player {
 
     raycaster = new Raycaster(new Vector3(),undefined,0,3);
     selectedCoords =null;
+    activeBlockId=blocks.grass.id;
     /**
      * @param {Scene} scene 
      */
@@ -158,12 +160,44 @@ export class Player {
      * @param {KeyboardEvent} event 
      */
     onKeyDown(event){
+        
+
         if (!this.controls.isLocked) {
             this.controls.lock();
             console.log("controls locked");
         }
         
         switch (event.code) {
+            case 'Digit0':
+                this.activeBlockId = Number(event.key);
+                console.log(`activeBlock is ${event.key}`);
+                break;
+            case 'Digit1':
+                this.activeBlockId = Number(event.key);
+                console.log(`activeBlock is ${event.key}`);
+                
+                break;
+            case 'Digit2':
+                this.activeBlockId = Number(event.key);
+                console.log(`activeBlock is ${event.key}`);
+                
+                break;
+            case 'Digit3':
+                this.activeBlockId = Number(event.key);
+                console.log(`activeBlock is ${event.key}`);
+                
+                break;
+            case 'Digit4':
+                this.activeBlockId = Number(event.key);
+                console.log(`activeBlock is ${event.key}`);
+                
+                break;
+            case 'Digit5':
+                this.activeBlockId = Number(event.key);
+                console.log(`activeBlock is ${event.key}`);
+                
+                break;
+
             case "KeyW": // Touche Z sur AZERTY
                 this.input.z = this.maxSpeed;
                 break;
