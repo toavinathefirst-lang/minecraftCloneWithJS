@@ -57,6 +57,20 @@ function setupLight() {
   ambient.intensity = 0.1;
   scene.add(ambient);
 }
+/**
+ * 
+ * @param {MouseEvent} event 
+ */
+function onMouseDown(event){
+  if(player.controls.isLocked && player.selectedCoords){
+    world.removeBlock(
+      player.selectedCoords.x,
+      player.selectedCoords.y,
+      player.selectedCoords.z
+    )
+  }
+}
+document.addEventListener('mousedown',onMouseDown);
 
 let previousTime = performance.now();
 function animate() {

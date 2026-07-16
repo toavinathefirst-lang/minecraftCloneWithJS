@@ -122,6 +122,7 @@ export class Player {
 
         if(intersections.length){
             const intersection = intersections[0];
+           
 
             // Vérifie que c'est bien une InstancedMesh avec un instanceId valide
             if (intersection.object.isInstancedMesh && intersection.instanceId !== undefined) {
@@ -134,10 +135,13 @@ export class Player {
                 intersection.object.updateMatrixWorld();
                 blockMatrix.premultiply(intersection.object.matrixWorld);
 
-                
+               
                 this.selectedCoords = new Vector3().setFromMatrixPosition(blockMatrix);
                 this.selectionHelper.position.copy(this.selectedCoords);
                 this.selectionHelper.visible = true;
+
+                console.log(this.selectedCoords);
+                
             } else {
                 // touché quelque chose qui n'est pas un bloc instancié
                 this.selectedCoords = null;
