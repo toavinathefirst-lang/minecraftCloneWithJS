@@ -3,6 +3,7 @@ import { SimplexNoise } from "three/examples/jsm/Addons.js";
 import { RNG } from "./rng";
 import { blocks } from "./block";
 import { ressources } from "./block";
+import { DataStore } from "./dataStore";
 
 const geometry = new THREE.BoxGeometry();
 const material = new THREE.MeshLambertMaterial();
@@ -32,28 +33,42 @@ export class WorldChunk extends THREE.Group {
     /** @type {boolean} */
     loaded = false;
 
+    /** @type {DataStore} */
+    dataStore = new DataStore();
+
     /**
      * @param {ChunkSize} size
      * @param {TerrainParams} params
+     * @param {DataStore} datastore - Store partagé entre chunks servant à
+     *   persister les modifications du joueur (ajout/suppression de blocs)
+     *   afin qu'elles survivent au déchargement/rechargement d'un chunk.
      */
-    constructor(size, params,datastore) {
+    constructor(size, params, datastore) {
         super();
         this.size = size;
         this.params = params;
         this.dataStore = datastore;
     }
 
-    /** @returns {void} */
+    /**
+     * Génère entièrement le chunk : terrain de base, ressources, relief,
+     * puis applique les modifications du joueur précédemment sauvegardées,
+     * et enfin construit les meshes instanciés.
+     * @returns {void}
+     */
     generate() {
         const rng = new RNG(this.params.seed);
         this.initializeTerrain();
         this.generateRessources(rng);
         this.generateTerrain(rng);
+        this.loadPlayerChanges();
         this.generateMeshes();
         this.loaded = true;
     }
 
     /**
+     * Place les blocs de ressources (minerais, etc.) dans le chunk en
+     * utilisant un bruit de Simplex 3D propre à chaque type de ressource.
      * @param {RNG} rng
      * @returns {void}
      */
@@ -77,7 +92,11 @@ export class WorldChunk extends THREE.Group {
         });
     }
 
-    /** @returns {void} */
+    /**
+     * Réinitialise le tableau `data` du chunk avec des blocs vides
+     * (dimensions width x height x width).
+     * @returns {void}
+     */
     initializeTerrain() {
         this.data = [];
         for (let x = 0; x < this.size.width; x++) {
@@ -96,6 +115,9 @@ export class WorldChunk extends THREE.Group {
     }
 
     /**
+     * Génère le relief (hauteur du terrain) à partir d'un bruit de Simplex 2D,
+     * avec une variation régionale (magnitude locale) pour éviter un relief
+     * uniforme sur toute la carte.
      * @param {RNG} rng
      * @returns {void}
      */
@@ -142,7 +164,11 @@ export class WorldChunk extends THREE.Group {
         }
     }
 
-    /** @returns {void} */
+    /**
+     * Construit un InstancedMesh par type de bloc et n'ajoute une instance
+     * que pour les blocs visibles (non entièrement entourés par d'autres blocs).
+     * @returns {void}
+     */
     generateMeshes() {
         this.disposeInstances();
 
@@ -190,6 +216,9 @@ export class WorldChunk extends THREE.Group {
     }
 
     /**
+     * Retrouve l'InstancedMesh correspondant à un type de bloc donné parmi
+     * les enfants du chunk.
+     *
      * Cast explicite : this.children est Object3D[] par défaut. Sans ce
      * cast, TS ne connaît pas les membres spécifiques à InstancedMesh
      * (setMatrixAt, getMatrixAt, instanceMatrix, count...) → affichés `any`.
@@ -203,6 +232,8 @@ export class WorldChunk extends THREE.Group {
     }
 
     /**
+     * Renvoie le bloc situé aux coordonnées locales (x, y, z) du chunk,
+     * ou `null` si les coordonnées sont hors limites.
      * @param {number} x
      * @param {number} y
      * @param {number} z
@@ -213,6 +244,8 @@ export class WorldChunk extends THREE.Group {
     }
 
     /**
+     * Vérifie que les coordonnées locales (x, y, z) sont bien à l'intérieur
+     * des dimensions du chunk.
      * @param {number} x
      * @param {number} y
      * @param {number} z
@@ -227,6 +260,8 @@ export class WorldChunk extends THREE.Group {
     }
 
     /**
+     * Modifie l'id du bloc aux coordonnées locales (x, y, z), sans toucher
+     * au dataStore (utilisé pour la génération procédurale du terrain).
      * @param {number} x
      * @param {number} y
      * @param {number} z
@@ -238,6 +273,7 @@ export class WorldChunk extends THREE.Group {
     }
 
     /**
+     * Associe un instanceId de mesh à un bloc donné (ou le retire si `null`).
      * @param {number} x
      * @param {number} y
      * @param {number} z
@@ -249,6 +285,8 @@ export class WorldChunk extends THREE.Group {
     }
 
     /**
+     * Détermine si un bloc est totalement entouré par des blocs non-vides
+     * (donc invisible, inutile de créer une instance de mesh pour lui).
      * @param {number} x
      * @param {number} y
      * @param {number} z
@@ -269,31 +307,68 @@ export class WorldChunk extends THREE.Group {
         );
     }
 
-    /** @returns {void} */
+    /**
+     * Applique au chunk fraîchement généré toutes les modifications du
+     * joueur (ajout/suppression de blocs) précédemment enregistrées dans le
+     * dataStore pour ce chunk, afin que la persistance survive au
+     * déchargement/rechargement.
+ 
+     * sauvegardés.
+     * @returns {void}
+     */
+    loadPlayerChanges() {
+        for (let x = 0; x < this.size.width; x++) {
+            for (let y = 0; y < this.size.height; y++) {
+                for (let z = 0; z < this.size.width; z++) {
+                    if (this.dataStore.contains(this.position.x, this.position.z, x, y, z)) {
+                        const blockId = this.dataStore.get(
+                            this.position.x,
+                            this.position.z,
+                            x, y, z
+                        );
+                        this.setBlockId(x, y, z, blockId);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Détruit et vide tous les meshes/instances du chunk (à appeler avant
+     * une régénération ou lors du déchargement du chunk).
+     * @returns {void}
+     */
     disposeInstances() {
         this.traverse((obj) => {
             if (obj.dispose) obj.dispose();
         });
         this.clear();
     }
+
     /**
-     * 
-     * @param {number} x 
-     * @param {number} y 
-     * @param {number} z 
-     * @param {number} blockId 
+     * Ajoute un bloc du joueur à la position locale (x, y, z) si cet
+     * emplacement est vide, met à jour le mesh et persiste le changement
+     * dans le dataStore.
+    
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     * @param {number} blockId
+     * @returns {void}
      */
-    addBlock(x,y,z,blockId){
-        if(this.getBlock(x,y,z).id === blocks.empty.id){
-            this.setBlockId(x,y,z,blockId);
-            this.addBLockInstance(x,y,z);
+    addBlock(x, y, z, blockId) {
+        if (this.getBlock(x, y, z).id === blocks.empty.id) {
+            this.setBlockId(x, y, z, blockId);
+            this.addBLockInstance(x, y, z);
+            this.dataStore.set(this.position.x, this.position.z, x, y, z, blockId);
         }
     }
 
     /**
-     * NOTE : c'est cette méthode (singulier) que World#removeBlock() doit
-     * appeler — le nom doit matcher, avant tu avais `removeBlocks` (pluriel)
-     * défini mais `removeBlock` (singulier) appelé depuis world.js → crash.
+     * Supprime le bloc à la position locale (x, y, z) : retire son
+     * instance de mesh, le remet à `empty`, et persiste le changement
+     * dans le dataStore.
+   
      * @param {number} x
      * @param {number} y
      * @param {number} z
@@ -305,13 +380,19 @@ export class WorldChunk extends THREE.Group {
 
         this.deleteBlockInstance(x, y, z);
         this.setBlockId(x, y, z, blocks.empty.id);
+        this.dataStore.set(this.position.x, this.position.z, x, y, z, blocks.empty.id);
     }
+
     /**
-     * @param {number} x 
+     * Crée une nouvelle instance de mesh pour un bloc déjà présent dans
+     * `data` mais qui n'en a pas encore (par exemple un bloc qui vient
+     * d'être révélé car son voisin a été retiré).
+     * @param {number} x
      * @param {number} y
-     * @param {number} z  
+     * @param {number} z
+     * @returns {void}
      */
-    addBLockInstance(x,y,z){
+    addBLockInstance(x, y, z) {
         const block = this.getBlock(x, y, z);
         if (!block || block.id === blocks.empty.id || block.instanceId !== null) return;
 
@@ -329,6 +410,8 @@ export class WorldChunk extends THREE.Group {
     }
 
     /**
+     * Retire l'instance de mesh du bloc à (x, y, z).
+     *
      * "Swap and pop" : déplace la dernière instance du mesh à l'emplacement
      * du bloc supprimé pour ne jamais laisser de trou dans les instances.
      * @param {number} x
@@ -357,7 +440,7 @@ export class WorldChunk extends THREE.Group {
 
         mesh.count--;
         mesh.instanceMatrix.needsUpdate = true;
-        mesh.computeBoundingSphere(); // computeBoundingHelper() n'existe pas
+        mesh.computeBoundingSphere(); 
 
         this.setBlockInstanceId(x, y, z, null);
     }
