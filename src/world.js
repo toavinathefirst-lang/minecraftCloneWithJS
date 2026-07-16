@@ -2,6 +2,7 @@ import { BoxHelper, Color, Group } from "three";
 import { WorldChunk } from "./worldChunk";
 import { Player } from "./player";
 import { RNG } from "./rng";
+import { DataStore } from "./dataStore";
 
 export class World extends Group {
     asyncLoading=true;
@@ -17,7 +18,9 @@ export class World extends Group {
             magnitude: 0.5,
             offset: 0.2
         }
-    }
+    };
+    dataStore = new DataStore();
+    
 
     lastPlayerChunk = { x: null, z: null };
     chunkQueue = [];
@@ -49,6 +52,7 @@ export class World extends Group {
     }
 
     generate() {
+        this.dataStore.clear();
         this.disposeChunks();
         for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
             for (let z = -this.drawDistance; z <= this.drawDistance; z++) {
@@ -62,7 +66,7 @@ export class World extends Group {
      * @param {number} z
      */
     generateChunk(x, z) {
-        const chunk = new WorldChunk(this.chunksSize, this.params);
+        const chunk = new WorldChunk(this.chunksSize, this.params,this.dataStore);
         chunk.position.set(x * this.chunksSize.width, 0, z * this.chunksSize.width);
         chunk.userData = { x, z };
         chunk.generate();
@@ -271,7 +275,14 @@ export class World extends Group {
                 coords.block.y,
                 coords.block.z,
                 blockId
-            )            
+            );
+            //hide the adjacent block neighbor if they are hidden
+            this.hideBlock(x-1,y,z)
+            this.hideBlock(x+1,y,z)
+            this.hideBlock(x,y-1,z)
+            this.hideBlock(x,y+1,z)
+            this.hideBlock(x,y,z-1)
+            this.hideBlock(x,y,z+1)            
         }
     }
 
@@ -317,6 +328,26 @@ export class World extends Group {
                 coords.block.y,
                 coords.block.z
             );
+        }
+    }
+     /**
+     * Hide the block at (x,y,z) by removing athe mesh instances
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} z 
+     */
+    hideBlock(x,y,z){
+        const coords = this.worldToChunkCoords(x,y,z);
+        const chunk = this.getChunk(coords.chunk.x,coords.chunk.z);
+        if(chunk && chunk.isBlockObscured(
+            coords.block.x,
+            coords.block.y,
+            coords.block.z)){
+                chunk.deleteBlockInstance(
+                    coords.block.x,
+                    coords.block.y,
+                    coords.block.z
+                );
         }
     }
 }

@@ -36,10 +36,11 @@ export class WorldChunk extends THREE.Group {
      * @param {ChunkSize} size
      * @param {TerrainParams} params
      */
-    constructor(size, params) {
+    constructor(size, params,datastore) {
         super();
         this.size = size;
         this.params = params;
+        this.dataStore = datastore;
     }
 
     /** @returns {void} */
