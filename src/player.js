@@ -139,6 +139,9 @@ export class Player {
 
                
                 this.selectedCoords = new Vector3().setFromMatrixPosition(blockMatrix);
+                if(this.activeBlockId >blocks.empty.id){
+                    this.selectedCoords.add(intersection.normal)
+                }
                 this.selectionHelper.position.copy(this.selectedCoords);
                 this.selectionHelper.visible = true;
 
