@@ -24,8 +24,12 @@ const material = new THREE.MeshLambertMaterial();
  * @typedef {Object} TerrainParams
  * @property {number} seed
  * @property {{scale:number, magnitude:number, offset:number}} terrain
+ * @property {{
+ *   trunk: {minHeight:number, maxHeight:number},
+ *   canopy: {minRadius:number, maxRadius:number, density:number},
+ *   frequency: number
+ * }} trees
  */
-
 export class WorldChunk extends THREE.Group {
     /** @type {Block[][][]} */
     data = [];
@@ -49,6 +53,49 @@ export class WorldChunk extends THREE.Group {
         this.params = params;
         this.dataStore = datastore;
     }
+    /**
+     * Populate the world with trees
+     * @param {RNG} rng 
+     */
+    generateTrees(rng){
+        /**
+         * @param {number} x,
+         * @param {number} z  
+         * @param {RNG} rng 
+         */
+        const generateTreeTrunk = (x, z, rng) => {
+            const minH = this.params.trees.trunk.minHeight; 
+            const maxH =this.params.trees.trunk.maxHeight;
+            const h =Math.round(minH + (maxH -minH)*rng.random())
+            
+            for(let y =0;y<this.size.height;y++){
+                const block = this.getBlock(x,y,z);
+                if (block?.id === blocks.grass.id){
+                    const treeTop = y + h; // hauteur finale du tronc, calculée UNE fois
+                    for (let treeY = y + 1; treeY <= treeTop && treeY < this.size.height; treeY++){
+                        this.setBlockId(x, treeY, z, blocks.tree.id);
+                    }
+                    break; 
+                }
+            }
+        }
+    
+        /**
+         * 
+         * @param {RNG} rng 
+         */
+        const generateTreeCanopy = (rng) => {
+
+        }
+        
+        for (let x=0;x<this.size.width;x++){
+            for(let z=0 ; z< this.size.width;z++){
+                if (rng.random() < this.params.trees.frequency){
+                    generateTreeTrunk(x,z,rng)
+                }
+            }
+        }
+    }
 
     /**
      * Génère entièrement le chunk : terrain de base, ressources, relief,
@@ -61,6 +108,7 @@ export class WorldChunk extends THREE.Group {
         this.initializeTerrain();
         this.generateRessources(rng);
         this.generateTerrain(rng);
+        this.generateTrees(rng)
         this.loadPlayerChanges();
         this.generateMeshes();
         this.loaded = true;
