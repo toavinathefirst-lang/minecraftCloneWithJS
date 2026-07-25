@@ -169,37 +169,14 @@ export class Player {
             this.controls.lock();
             console.log("controls locked");
         }
-        
+        // 1. Gestion dynamique des chiffres (Digit0 -> Digit9)
+        if (/^Digit[0-9]$/.test(event.code)) {
+            this.activeBlockId = Number(event.key);
+            console.log(`activeBlock is ${event.key}`);
+            return; 
+        }
         switch (event.code) {
-            case 'Digit0':
-                this.activeBlockId = Number(event.key);
-                console.log(`activeBlock is ${event.key}`);
-                break;
-            case 'Digit1':
-                this.activeBlockId = Number(event.key);
-                console.log(`activeBlock is ${event.key}`);
-                
-                break;
-            case 'Digit2':
-                this.activeBlockId = Number(event.key);
-                console.log(`activeBlock is ${event.key}`);
-                
-                break;
-            case 'Digit3':
-                this.activeBlockId = Number(event.key);
-                console.log(`activeBlock is ${event.key}`);
-                
-                break;
-            case 'Digit4':
-                this.activeBlockId = Number(event.key);
-                console.log(`activeBlock is ${event.key}`);
-                
-                break;
-            case 'Digit5':
-                this.activeBlockId = Number(event.key);
-                console.log(`activeBlock is ${event.key}`);
-                
-                break;
+            
 
             case "KeyW": // Touche Z sur AZERTY
                 this.input.z = this.maxSpeed;
