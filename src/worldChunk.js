@@ -75,17 +75,38 @@ export class WorldChunk extends THREE.Group {
                     for (let treeY = y + 1; treeY <= treeTop && treeY < this.size.height; treeY++){
                         this.setBlockId(x, treeY, z, blocks.tree.id);
                     }
+                    //generate canopy centered on the the top of three 
+                    generateTreeCanopy(x,y+h,z,rng);
                     break; 
                 }
             }
         }
     
         /**
+         * @param {number}x
+         * @param {number}y
+         * @param {number}z
          * 
          * @param {RNG} rng 
          */
-        const generateTreeCanopy = (rng) => {
-
+        const generateTreeCanopy = (centerX,centerY,centerZ,rng) => {
+            const minR = this.params.trees.canopy.minRadius;
+            const maxR = this.params.trees.canopy.maxRadius;
+            const r =Math.round(minR + (maxR - minR) * rng.random());
+            for (let x = -r; x <= r; x++) {
+                for (let y = -Math.min(r, 2); y <= r; y++) {
+                    for(let z=-r;z<=r;z++){
+                        //Make sure the blocks is within the canopy radius 
+                        if(Math.sqrt(x*x +y*y +z*z) >r) continue;
+                        //Don't overwrite an existing block
+                        const block = this.getBlock(centerX+x,centerY+y,centerZ+z);
+                        if(block && block.id !== blocks.empty.id) continue
+                        if(rng.random()<this.params.trees.canopy.density){
+                            this.setBlockId(centerX+x,centerY+y,centerZ+z,blocks.leaves.id);
+                        }
+                    }                
+                }               
+            }
         }
         
         for (let x=0;x<this.size.width;x++){
