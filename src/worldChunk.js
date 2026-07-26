@@ -108,9 +108,9 @@ export class WorldChunk extends THREE.Group {
                 }               
             }
         }
-        
-        for (let x=0;x<this.size.width;x++){
-            for(let z=0 ; z< this.size.width;z++){
+        let offset = this.params.trees.canopy.maxRadius;
+        for (let x=offset;x<this.size.width - offset;x++){
+            for(let z=0 ; z< this.size.width - offset ;z++){
                 if (rng.random() < this.params.trees.frequency){
                     generateTreeTrunk(x,z,rng)
                 }
