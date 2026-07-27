@@ -100,7 +100,13 @@ export const blocks = {
     cloud:{
         id:9,
         name:"cloud",
-        material:new MeshBasicMaterial({color:0xf0f0f0})
+        material:new MeshBasicMaterial({
+            color:0xf0f0f0,
+            wireframe: false,   
+            transparent: true,  
+            opacity: 0.25,      
+           // depthWrite: false   
+        })
     }
 
 }

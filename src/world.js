@@ -29,7 +29,10 @@ export class World extends Group {
                 density:0.5 // vary between 0.0 and 1.0
             },
             frequency:0.01
-            
+        },
+        clouds:{
+            scale:30,
+            density:0.15
         }
         
     };

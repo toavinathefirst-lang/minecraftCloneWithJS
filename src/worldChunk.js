@@ -29,6 +29,9 @@ const material = new THREE.MeshLambertMaterial();
  *   canopy: {minRadius:number, maxRadius:number, density:number},
  *   frequency: number
  * }} trees
+ * @property {{
+ *      scale:number,density:number
+ * }}clouds
  */
 export class WorldChunk extends THREE.Group {
     /** @type {Block[][][]} */
@@ -96,12 +99,13 @@ export class WorldChunk extends THREE.Group {
             for (let x = -r; x <= r; x++) {
                 for (let y = -Math.min(r, 2); y <= r; y++) {
                     for(let z=-r;z<=r;z++){
+                        const n = rng.random()
                         //Make sure the blocks is within the canopy radius 
                         if(Math.sqrt(x*x +y*y +z*z) >r) continue;
                         //Don't overwrite an existing block
                         const block = this.getBlock(centerX+x,centerY+y,centerZ+z);
                         if(block && block.id !== blocks.empty.id) continue
-                        if(rng.random()<this.params.trees.canopy.density){
+                        if(n<this.params.trees.canopy.density){
                             this.setBlockId(centerX+x,centerY+y,centerZ+z,blocks.leaves.id);
                         }
                     }                
@@ -112,7 +116,7 @@ export class WorldChunk extends THREE.Group {
         for (let x=offset;x<this.size.width - offset;x++){
             for(let z=0 ; z< this.size.width - offset ;z++){
                 if (rng.random() < this.params.trees.frequency){
-                    generateTreeTrunk(x,z,rng)
+                    generateTreeTrunk(x,z,rng);
                 }
             }
         }
@@ -129,10 +133,30 @@ export class WorldChunk extends THREE.Group {
         this.initializeTerrain();
         this.generateRessources(rng);
         this.generateTerrain(rng);
-        this.generateTrees(rng)
+        this.generateTrees(rng);
+        this.generateClouds(rng);
         this.loadPlayerChanges();
         this.generateMeshes();
         this.loaded = true;
+    }
+    /**
+     * 
+     * @param {RNG} rng 
+     */
+    generateClouds(rng){
+        const simplex = new SimplexNoise(rng);
+        for (let x = 0; x < this.size.width; x++) {
+            for(let z=0;z<this.size.width;z++){
+                const value = simplex.noise(
+                    (this.position.x + x) / this.params.clouds.scale,
+                    (this.position.z + z) /this.params.clouds.scale
+                ) +1 *0.5;
+                if (value < this.params.clouds.density){
+                    this.setBlockId(x,this.size.height -1,z,blocks.cloud.id)
+                }
+            }
+            
+        }
     }
 
     /**

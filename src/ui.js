@@ -32,13 +32,17 @@ export function createUI(world,player){
     scaleFolderStone.add(ressource.scale,'y',10,100).name('Y Scale');
     scaleFolderStone.add(ressource.scale,'z',10,100).name('Z Scale')
     })
-        const treeFolder = terrainFolder.addFolder("Trees");
-         treeFolder.add(world.params.trees,'frequency',0,0.1).name('frequency')
+        const treeFolder = terrainFolder.addFolder("Trees").close();
+        treeFolder.add(world.params.trees,'frequency',0,0.1).name('frequency')
         treeFolder.add(world.params.trees.trunk,'minHeight',0,10,1).name('Min Trunk Height');
         treeFolder.add(world.params.trees.trunk,'maxHeight',0,10,1).name('Max Trunk Height');
         treeFolder.add(world.params.trees.canopy,"minRadius",0,10,1).name('min Canopy size');
         treeFolder.add(world.params.trees.canopy,"maxRadius",0,10,1).name('max Canopy size');
         treeFolder.add(world.params.trees.canopy,"density",0,1).name('max Canopy size');
+
+        const cloudsFolder = terrainFolder.addFolder('clouds').close()
+        cloudsFolder.add(world.params.clouds,'scale',0,100).name("Cloud Size");
+        cloudsFolder.add(world.params.clouds,'density',0,1).name("Cloud cover");
 
     gui.onChange(()=>{
         world.generate()
