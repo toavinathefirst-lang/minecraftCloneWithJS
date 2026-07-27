@@ -8,6 +8,7 @@ import { Player } from './player';
 import { Physics } from './physics';
 import { World } from './world';
 import { blocks } from './block';
+import { ModelLoader } from './modelLoader';
 const stats = new Stats()
 document.body.append(stats.dom);
 const renderer = new THREE.WebGLRenderer();
@@ -27,12 +28,26 @@ controls.update();
 
 const scene = new THREE.Scene();
 const world = new World();
-scene.fog=new THREE.Fog(0x80a0e0,50,100)
+scene.fog=new THREE.Fog(0x80a0e0,50,100);
+
 world.generate();
 scene.add(world);
+
+
+
 const player = new Player(scene);
 const physics = new Physics(scene);
 const sun = new THREE.DirectionalLight();
+
+const modelLoader = new ModelLoader();
+modelLoader.loadModels( (models)=>{
+    //Add the pickaxe to the player
+    player.tool.setMesh(models.pickaxe)
+
+  }
+)
+
+
 function setupLight() {
   
   sun.position.set(50, 50, 50);

@@ -3,6 +3,7 @@ import { BoxGeometry, CameraHelper, CylinderGeometry, Euler, Matrix4, Mesh, Mesh
 import { Scene } from "three";
 import { World } from "./world";
 import { blocks } from "./block";
+import { Tool } from "./tool";
 
 const CENTER_SCREEN = new Vector2();
 export class Player {
@@ -22,6 +23,7 @@ export class Player {
     raycaster = new Raycaster(new Vector3(),undefined,0,3);
     selectedCoords =null;
     activeBlockId=blocks.grass.id;
+    tool = new Tool()
     /**
      * @param {Scene} scene 
      */
@@ -29,7 +31,9 @@ export class Player {
         this.camera.position.set(32, 16, 32);
         this.camera.layers.enable(1)
         scene.add(this.camera);
-        scene.add(this.cameraHelper);
+        //scene.add(this.cameraHelper);
+
+        this.camera.add(this.tool)
 
         document.addEventListener('keydown', this.onKeyDown.bind(this));
         document.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -42,9 +46,9 @@ export class Player {
        // scene.add(this.boundHelper);
 
        const selectionMaterial = new MeshBasicMaterial({
-        transparent:true,
-        opacity:0.3,
-        color:0xffffaa,
+            transparent:true,
+            opacity:0.3,
+            color:0xffffaa,
        })
 
        const selectionGeometry = new BoxGeometry(1.01,1.01,1.01);
