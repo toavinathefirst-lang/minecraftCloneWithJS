@@ -118,6 +118,7 @@ export class Player {
      */
     update(world){
         this.updateRayCaster(world);
+        this.tool.update()
     }
     /**
      * 

@@ -78,6 +78,7 @@ function setupLight() {
  */
 function onMouseDown(event){
   if(player.controls.isLocked && player.selectedCoords){
+    player.tool.startAnimation();
     if(player.activeBlockId === blocks.empty.id){
         console.log(`removing the block at ${JSON.stringify(player.selectedCoords)}`);
       
@@ -85,7 +86,8 @@ function onMouseDown(event){
         player.selectedCoords.x,
         player.selectedCoords.y,
         player.selectedCoords.z
-      )
+      );
+      
     }else {
         console.log(`add the block at ${JSON.stringify(player.selectedCoords)}`);
       
