@@ -16,7 +16,8 @@ export class World extends Group {
         terrain: {
             scale: 30,
             magnitude: 0.5,
-            offset: 0.2
+            offset: 5,
+            waterOffset : 6
         }, 
         trees:{
             trunk:{

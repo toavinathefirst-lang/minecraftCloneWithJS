@@ -23,7 +23,7 @@ const material = new THREE.MeshLambertMaterial();
 /**
  * @typedef {Object} TerrainParams
  * @property {number} seed
- * @property {{scale:number, magnitude:number, offset:number}} terrain
+ * @property {{scale:number, magnitude:number, offset:number,waterOffset:number}} terrain
  * @property {{
  *   trunk: {minHeight:number, maxHeight:number},
  *   canopy: {minRadius:number, maxRadius:number, density:number},
@@ -214,6 +214,13 @@ export class WorldChunk extends THREE.Group {
      * @param {RNG} rng
      * @returns {void}
      */
+    /**
+     * Génère le relief (hauteur du terrain) à partir d'un bruit de Simplex 2D,
+     * avec une variation régionale (magnitude locale) pour éviter un relief
+     * uniforme sur toute la carte.
+     * @param {RNG} rng
+     * @returns {void}
+     */
     generateTerrain(rng) {
         const simplex = new SimplexNoise(rng);
 
@@ -244,7 +251,12 @@ export class WorldChunk extends THREE.Group {
 
                 for (let y = 0; y <= height; y++) {
                     if (y === height) {
-                        this.setBlockId(x, y, z, blocks.grass.id);
+                        // Remplace l'herbe par du sable si le bloc est sous le niveau de l'eau
+                        if (height <= this.params.terrain.waterOffset) {
+                            this.setBlockId(x, y, z, blocks.sand.id);
+                        } else {
+                            this.setBlockId(x, y, z, blocks.grass.id);
+                        }
                     } else if (y < height && this.getBlock(x, y, z)?.id === blocks.empty.id) {
                         this.setBlockId(x, y, z, blocks.dirt.id);
                     }
@@ -256,6 +268,25 @@ export class WorldChunk extends THREE.Group {
             }
         }
     }
+    generateWater(){
+        const material =new  THREE.MeshLambertMaterial({
+            color:0x9090e0,
+            transparent:true,
+            opacity:0.5,
+            side:THREE.DoubleSide
+        })
+
+        const waterMesh = new THREE.Mesh(new THREE.PlaneGeometry(), material);
+        waterMesh.rotateX(-Math.PI/2.0);
+        waterMesh.position.set(
+            this.size.width / 2 ,
+            this.params.terrain.waterOffset,
+            this.size.width / 2
+        );
+        waterMesh.scale.set(this.size.width,this.size.width,1);
+
+        this.add(waterMesh)
+    }
 
     /**
      * Construit un InstancedMesh par type de bloc et n'ajoute une instance
@@ -263,7 +294,10 @@ export class WorldChunk extends THREE.Group {
      * @returns {void}
      */
     generateMeshes() {
+        this.clear();
+        
         this.disposeInstances();
+        this.generateWater()
 
         const maxCount = this.size.width * this.size.width * this.size.height;
 
