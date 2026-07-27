@@ -169,6 +169,7 @@ export class Physics {
                 this.addContatPointHelper(closestPoint);
             }
         }       
+        
         return collisions;
     }
 

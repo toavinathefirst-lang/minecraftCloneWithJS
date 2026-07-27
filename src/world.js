@@ -94,7 +94,7 @@ export class World extends Group {
         const helper = new BoxHelper(chunk, new Color(0x00ffff));
         helper.name = "chunkBoundaryHelper";
         helper.userData.linkedChunk = chunk;
-        this.add(helper);
+        //this.add(helper);
     }
 
     /**
@@ -192,12 +192,12 @@ export class World extends Group {
                 chunk.disposeInstances();
                 this.remove(chunk);
 
-                const linkedHelper = this.children.find(
-                    (child) => child.name === "chunkBoundaryHelper" && child.userData.linkedChunk === chunk
-                );
-                if (linkedHelper) {
-                    this.remove(linkedHelper);
-                }
+                // const linkedHelper = this.children.find(
+                //     (child) => child.name === "chunkBoundaryHelper" && child.userData.linkedChunk === chunk
+                // );
+                // if (linkedHelper) {
+                //     this.remove(linkedHelper);
+                // }
             }
 
             return chunksToRemove;

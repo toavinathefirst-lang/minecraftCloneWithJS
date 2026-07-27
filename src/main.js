@@ -51,7 +51,7 @@ function setupLight() {
   scene.add(sun.target)
 
   const shadowHelper = new THREE.CameraHelper(sun.shadow.camera);
-  scene.add(shadowHelper)
+  //scene.add(shadowHelper)
 
   const ambient = new THREE.AmbientLight();
   ambient.intensity = 0.1;
