@@ -27,6 +27,7 @@ export class Player {
      */
     constructor(scene){
         this.camera.position.set(32, 16, 32);
+        this.camera.layers.enable(1)
         scene.add(this.camera);
         scene.add(this.cameraHelper);
 

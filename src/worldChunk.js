@@ -280,10 +280,11 @@ export class WorldChunk extends THREE.Group {
         waterMesh.rotateX(-Math.PI/2.0);
         waterMesh.position.set(
             this.size.width / 2 ,
-            this.params.terrain.waterOffset,
+            this.params.terrain.waterOffset + 0.4,
             this.size.width / 2
         );
         waterMesh.scale.set(this.size.width,this.size.width,1);
+        waterMesh.layers.set(1);
 
         this.add(waterMesh)
     }
