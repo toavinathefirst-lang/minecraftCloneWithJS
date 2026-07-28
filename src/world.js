@@ -42,12 +42,40 @@ export class World extends Group {
 
     lastPlayerChunk = { x: null, z: null };
     chunkQueue = [];
-
+    /**
+     * save the world data to local storage
+     */
+    save(){
+        localStorage.setItem('minecraft_params',JSON.stringify(this.params));
+        localStorage.setItem('minecraft_data',JSON.stringify(this.dataStore.data));
+        document.getElementById('status').innerHTML="GAME SAVED";
+        setTimeout(()=> document.getElementById('status').innerHTML='',3000)
+    }
+    /**
+     * load the world data from disk
+     */
+    load(){
+        this.params =JSON.parse(localStorage.getItem('minecraft_params'));
+        this.dataStore.data = JSON.parse(localStorage.getItem('minecraft_data'));
+        document.getElementById('status').innerHTML="GAME LOADED";
+        setTimeout(()=> document.getElementById('status').innerHTML='',3000)
+        this.generate()
+    }
     constructor(seed = 0) {
         super();
         this.seed = seed;
         this.params.seed = seed;
 
+        document.addEventListener('keydown',(e)=>{
+            switch (e.code) {
+                case 'KeyF':
+                    this.save()
+                    break;
+                case 'KeyL':
+                    this.load()
+                    break;
+            }
+        })
         // On randomise le "style" du terrain une seule fois pour tout le monde,
         // à partir du seed. Important : ça ne doit PAS être fait par chunk,
         // sinon on aurait des ruptures visibles (montagnes hautes d'un côté,
@@ -69,8 +97,11 @@ export class World extends Group {
         this.params.terrain.offset = 0.15 + rng.random() * 0.15;  // ~[0.15, 0.3] niveau de base
     }
 
-    generate() {
-        this.dataStore.clear();
+    generate(clearCache=false) {
+        if(clearCache){
+             this.dataStore.clear();
+        }
+       
         this.disposeChunks();
         for (let x = -this.drawDistance; x <= this.drawDistance; x++) {
             for (let z = -this.drawDistance; z <= this.drawDistance; z++) {

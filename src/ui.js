@@ -45,6 +45,6 @@ export function createUI(world,player){
         cloudsFolder.add(world.params.clouds,'density',0,1).name("Cloud cover");
 
     gui.onChange(()=>{
-        world.generate()
+        world.generate(true)
     })
 }
