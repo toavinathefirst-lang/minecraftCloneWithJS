@@ -39,6 +39,7 @@ export class Tool extends Group{
         }
 
         startAnimation(){
+            if (this.animate) return
             console.log("start tool  animation");
             
             this.animate =  true ;
