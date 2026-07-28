@@ -22,7 +22,7 @@ export class Player {
 
     raycaster = new Raycaster(new Vector3(),undefined,0,3);
     selectedCoords =null;
-    activeBlockId=blocks.grass.id;
+    activeBlockId=blocks.empty.id;
     tool = new Tool()
     /**
      * @param {Scene} scene 
@@ -177,9 +177,12 @@ export class Player {
         }
         // 1. Gestion dynamique des chiffres (Digit0 -> Digit9)
         if (/^Digit[0-9]$/.test(event.code)) {
+            document.getElementById(`toolbar-${this.activeBlockId}`).classList.remove('selected');
             this.activeBlockId = Number(event.key);
+            document.getElementById(`toolbar-${this.activeBlockId}`).classList.add('selected');
             console.log(`activeBlock is ${event.key}`);
-            return; 
+
+            this.tool.visible = (this.activeBlockId ===0);
         }
         switch (event.code) {
             
