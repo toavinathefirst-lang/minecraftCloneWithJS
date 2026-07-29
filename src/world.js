@@ -29,7 +29,7 @@ export class World extends Group {
                 amplitude: 0.2,
                 scale: 50
             },
-            tundraToTemperate: 0.15,
+            tundraToTemperate: 0.25,
             temperateToJungle: 0.5,
             jungleToDesert: 0.75
         },

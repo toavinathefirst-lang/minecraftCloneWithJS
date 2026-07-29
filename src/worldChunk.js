@@ -26,8 +26,14 @@ const material = new THREE.MeshLambertMaterial();
  * @property {number} seed
  * @property {{scale:number, magnitude:number, offset:number,waterOffset:number}} terrain
  * @property {{
- *      temperature:{scale:number},
- *      humidity:{scale:number}
+ *     scale: number,
+ *           variation: {
+  *              amplitude: number,
+   *             scale: number
+    *        },
+     *       tundraToTemperate: number,
+      *      temperateToJungle: number,
+       *     jungleToDesert: number
  *  }} biomes
  * @property {{
  *   trunk: {minHeight:number, maxHeight:number},
@@ -112,6 +118,7 @@ export class WorldChunk extends THREE.Group {
                 if (block?.id === blocks.grass.id){
                     const treeTop = y + h; // hauteur finale du tronc, calculée UNE fois
                     for (let treeY = y + 1; treeY <= treeTop && treeY < this.size.height; treeY++){
+                        
                         this.setBlockId(x, treeY, z, blocks.tree.id);
                     }
                     //generate canopy centered on the the top of three 
@@ -295,12 +302,13 @@ export class WorldChunk extends THREE.Group {
                         } else {
                             if(biome==='desert'){
                                 groundBlockType = blocks.sand.id
-                            }else if(biome =='temperate'){
+                            }else if(biome =='temperate' || biome=="jungle"){
                                 groundBlockType = blocks.grass.id
-                            }else if (biome== 'jungle'){
-                                groundBlockType=blocks.dirt.id;//c est encore pour tester jungle et je vois aucune zone composée uniquement de dirt dans mes mondes 
                             }else if (biome=='tundra'){
-                                groundBlockType = blocks.snow.id;
+                                const snowCapThreshold = this.size.height * 0.7; // à ajuster
+                                groundBlockType = (height > snowCapThreshold)
+                                    ? blocks.snow.id
+                                    : blocks.snowDirt.id;
                             }
                             this.setBlockId(x,y,z,groundBlockType)
                             

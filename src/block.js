@@ -28,7 +28,9 @@ const textures = {
     snowSide:loadTexture("../assets/textures/snow_side.png"),
     jungleTreeSide:loadTexture("../assets/textures/jungle_tree_side.png"),
     jungleTreeTop:loadTexture("../assets/textures/jungle_tree_top.png"),
-    jungleLeaves:loadTexture("../assets/textures/jungle_leaves.png")
+    jungleLeaves:loadTexture("../assets/textures/jungle_leaves.png"),
+    cactusSide:loadTexture("../assets/textures/cactus_side.png"),
+    cactusTop:loadTexture("../assets/textures/cactus_top.png")
 
     
 }
@@ -148,6 +150,18 @@ export const blocks = {
         name:"leaves",
         material:new MeshLambertMaterial({map:textures.jungleLeaves})
     },
+    cactus:{
+        id:14,
+        name:"cactus",
+        material:[
+               new MeshLambertMaterial({ map: textures.cactusSide }), // right
+            new MeshLambertMaterial({ map: textures.cactusSide }), // left
+            new MeshLambertMaterial({ map: textures.cactusTop }),     // top
+            new MeshLambertMaterial({ map: textures.cactusTop }),      // bottom
+            new MeshLambertMaterial({ map: textures.cactusSide }), // front
+            new MeshLambertMaterial({ map: textures.cactusSide})  // back
+        ]
+    }
 
 }
 
