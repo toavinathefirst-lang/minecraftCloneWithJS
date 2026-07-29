@@ -24,6 +24,12 @@ const textures = {
     treeSide:loadTexture("../assets/textures/tree_side.png"),
     treeTop:loadTexture("../assets/textures/tree_top.png"),
     sand:loadTexture("../assets/textures/sand.png"),
+    snow:loadTexture("../assets/textures/snow.png"),
+    snowSide:loadTexture("../assets/textures/snow_side.png"),
+    jungleTreeSide:loadTexture("../assets/textures/jungle_tree_side.png"),
+    jungleTreeTop:loadTexture("../assets/textures/jungle_tree_top.png"),
+    jungleLeaves:loadTexture("../assets/textures/jungle_leaves.png")
+
     
 }
 
@@ -107,7 +113,41 @@ export const blocks = {
             opacity: 0.25,      
            // depthWrite: false   
         })
-    }
+    },
+    snowDirt:{
+        id:10,
+        name:'snowDirt',
+        material:[
+               new MeshLambertMaterial({ map: textures.snowSide }), // right
+            new MeshLambertMaterial({ map: textures.snowSide }), // left
+            new MeshLambertMaterial({ map: textures.snow }),     // top
+            new MeshLambertMaterial({ map: textures.dirt }),      // bottom
+            new MeshLambertMaterial({ map: textures.snowSide }), // front
+            new MeshLambertMaterial({ map: textures.snowSide })  // back
+        ]
+    },
+    snow:{
+        id:11,
+        name:'snow',
+        material:new MeshLambertMaterial({map:textures.snow})
+    },
+     jungleTree:{
+        id:12,
+        name:"tree",
+        material:[
+               new MeshLambertMaterial({ map: textures.jungleTreeSide }), // right
+            new MeshLambertMaterial({ map: textures.jungleTreeSide }), // left
+            new MeshLambertMaterial({ map: textures.jungleTreeTop }),     // top
+            new MeshLambertMaterial({ map: textures.jungleTreeTop }),      // bottom
+            new MeshLambertMaterial({ map: textures.jungleTreeSide }), // front
+            new MeshLambertMaterial({ map: textures.jungleTreeSide})  // back
+        ]
+    },
+    jungleLeaves:{
+        id:13,
+        name:"leaves",
+        material:new MeshLambertMaterial({map:textures.jungleLeaves})
+    },
 
 }
 
