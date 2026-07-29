@@ -21,6 +21,8 @@ export function createUI(world,player){
     // À 0, il n'y a plus de relief du tout -> terrain plat
     terrainFolder.add(world.params.terrain,'magnitude',0,1).name('Magnitude (relief)');
     terrainFolder.add(world.params.terrain,'offset',0,1).name('Offset (hauteur de base)');
+    const biomesFolder = gui.addFolder('Biomes');
+    biomesFolder.add(world.params.biomes.temperature,'scale',0,400).name("temperature");
 
     const ressourcesFolder = gui.addFolder('Ressources');
     ressources.forEach(ressource=>{

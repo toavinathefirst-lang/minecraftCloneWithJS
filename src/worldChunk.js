@@ -25,6 +25,10 @@ const material = new THREE.MeshLambertMaterial();
  * @property {number} seed
  * @property {{scale:number, magnitude:number, offset:number,waterOffset:number}} terrain
  * @property {{
+ *      temperature:{scale:number},
+ *      humidity:{scale:number}
+ *  }} biomes
+ * @property {{
  *   trunk: {minHeight:number, maxHeight:number},
  *   canopy: {minRadius:number, maxRadius:number, density:number},
  *   frequency: number
@@ -57,9 +61,34 @@ export class WorldChunk extends THREE.Group {
         this.dataStore = datastore;
     }
     /**
+     * get the biome at the local chunk coordinates (x,z)
+     * @param {SimplexNoise} simplex
+     * @param {number} x 
+     * @param {number} z  
+     */
+    getBiome(simplex,x,z){
+        
+
+        const temperature = simplex.noise(
+            (this.position.x +x) / this.params.biomes.temperature.scale,
+            (this.position.z +z) / this.params.biomes.temperature.scale
+        )
+
+        const humidity = simplex.noise(
+            -(this.position.x + x ) / this.params.biomes.humidity.scale,
+            -(this.position.z +z) / this.params.biomes.humidity.scale
+        )
+        if (temperature > 0) {
+            return humidity > 0 ? 'jungle' : 'desert';
+        } else {
+            return humidity > 0 ? 'temperate' : 'tundra';
+        }
+    }
+    /**
      * Populate the world with trees
      * @param {RNG} rng 
      */
+    
     generateTrees(rng){
         /**
          * @param {number} x,
@@ -250,12 +279,24 @@ export class WorldChunk extends THREE.Group {
                 height = Math.max(0, Math.min(height, this.size.height - 1));
 
                 for (let y = 0; y <= height; y++) {
+                    const biome = this.getBiome(simplex,x,z);
+                    let groundBlockType=blocks.dirt.id;
                     if (y === height) {
                         // Remplace l'herbe par du sable si le bloc est sous le niveau de l'eau
                         if (height <= this.params.terrain.waterOffset) {
                             this.setBlockId(x, y, z, blocks.sand.id);
                         } else {
-                            this.setBlockId(x, y, z, blocks.grass.id);
+                            if(biome==='desert'){
+                                groundBlockType = blocks.sand.id
+                            }else if(biome =='temperate'){
+                                groundBlockType = blocks.grass.id
+                            }else if (biome== 'jungle'){
+                                groundBlockType=blocks.dirt.id;//c est encore pour tester jungle et je vois aucune zone composée uniquement de dirt dans mes mondes 
+                            }else if (biome=='tundra'){
+                                groundBlockType = blocks.snow.id;
+                            }
+                            this.setBlockId(x,y,z,groundBlockType)
+                            
                         }
                     } else if (y < height && this.getBlock(x, y, z)?.id === blocks.empty.id) {
                         this.setBlockId(x, y, z, blocks.dirt.id);

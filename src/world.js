@@ -3,8 +3,10 @@ import { WorldChunk } from "./worldChunk";
 import { Player } from "./player";
 import { RNG } from "./rng";
 import { DataStore } from "./dataStore";
+import { SimplexNoise } from "three/examples/jsm/Addons.js";
 
 export class World extends Group {
+    
     asyncLoading=true;
     drawDistance = 2;
     chunksSize = {
@@ -19,6 +21,14 @@ export class World extends Group {
             offset: 5,
             waterOffset : 6
         }, 
+        biomes:{
+            temperature:{
+                scale:100
+            },
+            humidity:{
+                scale:100
+            }
+        },
         trees:{
             trunk:{
                 minHeight:4,
