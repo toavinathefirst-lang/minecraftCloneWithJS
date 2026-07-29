@@ -1,3 +1,5 @@
+//c est mon code 
+
 import { BoxHelper, Color, Group } from "three";
 import { WorldChunk } from "./worldChunk";
 import { Player } from "./player";
@@ -21,13 +23,15 @@ export class World extends Group {
             offset: 5,
             waterOffset : 6
         }, 
-        biomes:{
-            temperature:{
-                scale:100
+        biomes: {
+            scale: 500,
+            variation: {
+                amplitude: 0.2,
+                scale: 50
             },
-            humidity:{
-                scale:100
-            }
+            tundraToTemperate: 0.15,
+            temperateToJungle: 0.5,
+            jungleToDesert: 0.75
         },
         trees:{
             trunk:{

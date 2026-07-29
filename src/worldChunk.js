@@ -1,3 +1,4 @@
+//c est mon code 
 import * as THREE from "three";
 import { SimplexNoise } from "three/examples/jsm/Addons.js";
 import { RNG } from "./rng";
@@ -66,24 +67,30 @@ export class WorldChunk extends THREE.Group {
      * @param {number} x 
      * @param {number} z  
      */
-    getBiome(simplex,x,z){
-        
+   getBiome(simplex, x, z) {
+            // Bruit principal, ramené entre 0 et 1
+            let noise = 0.5 * simplex.noise(
+                (this.position.x + x) / this.params.biomes.scale,
+                (this.position.z + z) / this.params.biomes.scale
+            ) + 0.5;
 
-        const temperature = simplex.noise(
-            (this.position.x +x) / this.params.biomes.temperature.scale,
-            (this.position.z +z) / this.params.biomes.temperature.scale
-        )
+            // Bruit de variation, superposé au bruit principal pour casser
+            // les frontières trop nettes entre les biomes
+            noise += this.params.biomes.variation.amplitude * simplex.noise(
+                (this.position.x + x) / this.params.biomes.variation.scale,
+                (this.position.z + z) / this.params.biomes.variation.scale
+            );
 
-        const humidity = simplex.noise(
-            -(this.position.x + x ) / this.params.biomes.humidity.scale,
-            -(this.position.z +z) / this.params.biomes.humidity.scale
-        )
-        if (temperature > 0) {
-            return humidity > 0 ? 'jungle' : 'desert';
-        } else {
-            return humidity > 0 ? 'temperate' : 'tundra';
+            if (noise < this.params.biomes.tundraToTemperate) {
+                return 'tundra';
+            } else if (noise < this.params.biomes.temperateToJungle) {
+                return 'temperate';
+            } else if (noise < this.params.biomes.jungleToDesert) {
+                return 'jungle';
+            } else {
+                return 'desert';
+            }
         }
-    }
     /**
      * Populate the world with trees
      * @param {RNG} rng 
