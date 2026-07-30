@@ -27,7 +27,7 @@ controls.target.set(16, 0, 16);
 controls.update();
 
 const scene = new THREE.Scene();
-const world = new World();
+const world = new World(55);
 scene.fog=new THREE.Fog(0x80a0e0,50,100);
 
 world.generate();
